@@ -1,0 +1,181 @@
+[
+  {
+    "name": "all",
+    "permission": 7,
+    "data": "0x",
+    "decoded": {
+      "type": "all"
+    }
+  },
+  {
+    "name": "manageAuthority",
+    "permission": 8,
+    "data": "0x",
+    "decoded": {
+      "type": "manageAuthority"
+    }
+  },
+  {
+    "name": "allButManageAuthority",
+    "permission": 15,
+    "data": "0x",
+    "decoded": {
+      "type": "allButManageAuthority"
+    }
+  },
+  {
+    "name": "programAll",
+    "permission": 13,
+    "data": "0x",
+    "decoded": {
+      "type": "programAll"
+    }
+  },
+  {
+    "name": "program",
+    "permission": 3,
+    "data": "0x0000000000000000000000003333333333333333333333333333333333333333",
+    "decoded": {
+      "type": "program",
+      "target": "0x3333333333333333333333333333333333333333"
+    }
+  },
+  {
+    "name": "nativeLimit",
+    "permission": 1,
+    "data": "0x0807060504030201",
+    "decoded": {
+      "type": "nativeLimit",
+      "amount": "72623859790382856"
+    }
+  },
+  {
+    "name": "nativeRecurringLimit",
+    "permission": 2,
+    "data": "0x0807060504030201040302010000000000000000000000000807060504030201",
+    "decoded": {
+      "type": "nativeRecurringLimit",
+      "limit": {
+        "recurringAmount": "72623859790382856",
+        "window": "16909060",
+        "lastReset": "0",
+        "currentAmount": "72623859790382856"
+      }
+    }
+  },
+  {
+    "name": "nativeDestinationLimit",
+    "permission": 16,
+    "data": "0x00000000000000000000000022222222222222222222222222222222222222220807060504030201",
+    "decoded": {
+      "type": "nativeDestinationLimit",
+      "destination": "0x2222222222222222222222222222222222222222",
+      "amount": "72623859790382856"
+    }
+  },
+  {
+    "name": "nativeRecurringDestinationLimit",
+    "permission": 17,
+    "data": "0x00000000000000000000000022222222222222222222222222222222222222220807060504030201040302010000000000000000000000000807060504030201",
+    "decoded": {
+      "type": "nativeRecurringDestinationLimit",
+      "destination": "0x2222222222222222222222222222222222222222",
+      "limit": {
+        "recurringAmount": "72623859790382856",
+        "window": "16909060",
+        "lastReset": "0",
+        "currentAmount": "72623859790382856"
+      }
+    }
+  },
+  {
+    "name": "tokenLimit",
+    "permission": 5,
+    "data": "0x00000000000000000000000011111111111111111111111111111111111111110807060504030201",
+    "decoded": {
+      "type": "tokenLimit",
+      "token": "0x1111111111111111111111111111111111111111",
+      "amount": "72623859790382856"
+    }
+  },
+  {
+    "name": "tokenRecurringLimit",
+    "permission": 6,
+    "data": "0x00000000000000000000000011111111111111111111111111111111111111110403020100000000080706050403020108070605040302010000000000000000",
+    "decoded": {
+      "type": "tokenRecurringLimit",
+      "token": "0x1111111111111111111111111111111111111111",
+      "limit": {
+        "recurringAmount": "72623859790382856",
+        "window": "16909060",
+        "lastReset": "0",
+        "currentAmount": "72623859790382856"
+      }
+    }
+  },
+  {
+    "name": "tokenDestinationLimit",
+    "permission": 18,
+    "data": "0x000000000000000000000000111111111111111111111111111111111111111100000000000000000000000022222222222222222222222222222222222222220807060504030201",
+    "decoded": {
+      "type": "tokenDestinationLimit",
+      "token": "0x1111111111111111111111111111111111111111",
+      "destination": "0x2222222222222222222222222222222222222222",
+      "amount": "72623859790382856"
+    }
+  },
+  {
+    "name": "tokenRecurringDestinationLimit",
+    "permission": 19,
+    "data": "0x000000000000000000000000111111111111111111111111111111111111111100000000000000000000000022222222222222222222222222222222222222220807060504030201040302010000000000000000000000000807060504030201",
+    "decoded": {
+      "type": "tokenRecurringDestinationLimit",
+      "token": "0x1111111111111111111111111111111111111111",
+      "destination": "0x2222222222222222222222222222222222222222",
+      "limit": {
+        "recurringAmount": "72623859790382856",
+        "window": "16909060",
+        "lastReset": "0",
+        "currentAmount": "72623859790382856"
+      }
+    }
+  },
+  {
+    "name": "storedNativeRecurring",
+    "permission": 2,
+    "data": "0x0807060504030201040302010000000008070605000000000504030201000000",
+    "decoded": {
+      "type": "nativeRecurringLimit",
+      "limit": {
+        "recurringAmount": "72623859790382856",
+        "window": "16909060",
+        "lastReset": "84281096",
+        "currentAmount": "4328719365"
+      }
+    }
+  },
+  {
+    "name": "storedTokenRecurring",
+    "permission": 6,
+    "data": "0x00000000000000000000000011111111111111111111111111111111111111110403020100000000080706050403020105040302010000000807060500000000",
+    "decoded": {
+      "type": "tokenRecurringLimit",
+      "token": "0x1111111111111111111111111111111111111111",
+      "limit": {
+        "recurringAmount": "72623859790382856",
+        "window": "16909060",
+        "lastReset": "84281096",
+        "currentAmount": "4328719365"
+      }
+    }
+  },
+  {
+    "name": "maximumNativeLimit",
+    "permission": 1,
+    "data": "0xffffffffffffffff",
+    "decoded": {
+      "type": "nativeLimit",
+      "amount": "18446744073709551615"
+    }
+  }
+]

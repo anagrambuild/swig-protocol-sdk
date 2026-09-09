@@ -1,0 +1,42 @@
+{
+  "name": "@swig-wallet/evm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Thin TypeScript bindings and codecs for the EVM Swig protocol",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./abi": {
+      "types": "./dist/abi.d.ts",
+      "import": "./dist/abi.js"
+    }
+  },
+  "scripts": {
+    "generate": "python3 ../scripts/sync-abis.py",
+    "check:generated": "python3 ../scripts/sync-abis.py --check",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "bun test tests",
+    "check": "bun run check:generated && bun run typecheck && bun run lint && bun run test && bun run build",
+    "typecheck:integration": "tsc --noEmit -p tsconfig.integration.json"
+  },
+  "peerDependencies": {
+    "viem": "^2.56.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@types/bun": "1.4.2",
+    "typescript": "5.9.3",
+    "viem": "2.56.3"
+  }
+}

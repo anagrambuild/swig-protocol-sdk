@@ -47,5 +47,7 @@ done
 ```
 
 When updating the snapshot, regenerate all four ABIs together and update the
-source revision and tool versions here. Review the ABI diff for compatibility
-changes before merging.
+source revision and tool versions here, and the machine-readable revision in
+`source.json`. Then run `python3 evm/scripts/sync-abis.py` from the SDK root to
+refresh both language packages. Review ABI and codec compatibility together
+before merging.
