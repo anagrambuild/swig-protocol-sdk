@@ -1,0 +1,17 @@
+[package]
+name = "swig-evm"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94.1"
+description = "Thin Rust bindings and codecs for the EVM Swig protocol"
+repository = "https://github.com/anagrambuild/swig-protocol-sdk"
+publish = false
+include = ["src/**", "abi/**", "README.md", "Cargo.toml"]
+
+[dependencies]
+alloy = { version = "2.4.2", default-features = false, features = ["std", "contract"] }
+thiserror = "2"
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

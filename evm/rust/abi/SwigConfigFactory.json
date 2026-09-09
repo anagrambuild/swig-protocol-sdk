@@ -1,0 +1,427 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "configImplementation_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "vaultImplementation_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "capsuleImplementation_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "p256Verifier_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "beaconOwner_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "capsuleBeacon",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "capsuleImplementation",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "computeCapsuleAddress",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "computeConfigAddress",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "computeVaultAddress",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "configBeacon",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "configImplementation",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "deploy",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "config",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "vault",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "p256Verifier",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vaultBeacon",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vaultImplementation",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "SwigDeployed",
+    "inputs": [
+      {
+        "name": "config",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "vault",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "configImplementation",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "vaultImplementation",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "capsule",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "capsuleImplementation",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "CapsuleInitializationFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidBeaconOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidImplementation",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidP256Verifier",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VaultInitializationFailed",
+    "inputs": []
+  }
+]
