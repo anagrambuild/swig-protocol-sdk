@@ -14,7 +14,8 @@ import {
   zeroAddress,
 } from "viem";
 import {
-  entryPoint08Abi,
+  entryPoint09Abi,
+  entryPoint09Address,
   getUserOperationTypedData,
   type SmartAccount,
   type SmartAccountImplementation,
@@ -33,7 +34,7 @@ const stubSignature =
   `0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798${"22".repeat(32)}1b` as const;
 
 export type SwigSmartAccount = SmartAccount<
-  SmartAccountImplementation<typeof entryPoint08Abi, "0.8">
+  SmartAccountImplementation<typeof entryPoint09Abi, "0.9">
 >;
 
 export type ToSwigSmartAccountParameters = {
@@ -64,9 +65,11 @@ export async function toSwigSmartAccount(
     !Number.isInteger(validUntil) ||
     validAfter < 0 ||
     validUntil <= validAfter ||
-    validUntil > 0xffffffffffff
+    validUntil > 0x7fffffffffff
   )
-    throw new Error("Swig requires an explicit uint48 validity window");
+    throw new Error(
+      "Swig requires an explicit uint47 timestamp validity window",
+    );
   if (!(await client.getCode({ address })))
     throw new Error("Swig account must already be deployed");
   const entryPoint = await client.readContract({
@@ -74,13 +77,17 @@ export async function toSwigSmartAccount(
     abi: swigConfigAbi,
     functionName: "entryPoint",
   });
+  if (!isAddressEqual(entryPoint, entryPoint09Address))
+    throw new Error(
+      "Swig account must use the canonical EntryPoint v0.9 release",
+    );
   const roleKey = BigInt(roleId);
   const unsupported = async (): Promise<never> => {
     throw new Error("Swig account supports UserOperation signing only");
   };
   return toSmartAccount({
     client,
-    entryPoint: { address: entryPoint, abi: entryPoint08Abi, version: "0.8" },
+    entryPoint: { address: entryPoint, abi: entryPoint09Abi, version: "0.9" },
     getAddress: async () => address,
     getFactoryArgs: async () => ({}),
     // Viem defaults to independent time-based keys. Swig deliberately has one lane per role.
@@ -95,7 +102,7 @@ export async function toSwigSmartAccount(
         throw new Error("Swig nonce key must equal roleId");
       return client.readContract({
         address: entryPoint,
-        abi: entryPoint08Abi,
+        abi: entryPoint09Abi,
         functionName: "getNonce",
         args: [address, roleKey],
       });

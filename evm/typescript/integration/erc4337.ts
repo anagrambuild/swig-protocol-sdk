@@ -1,24 +1,27 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   type Abi,
   type Address,
   BaseError,
+  createClient,
   createPublicClient,
   createWalletClient,
   defineChain,
   encodeFunctionData,
+  getAddress,
   type Hex,
   http,
   parseAbi,
   RpcRequestError,
+  rpcSchema,
   stringToHex,
 } from "viem";
 import {
   createBundlerClient,
-  entryPoint08Abi,
-  entryPoint08Address,
+  entryPoint09Abi,
+  entryPoint09Address,
   toPackedUserOperation,
   UserOperationSignatureError,
 } from "viem/account-abstraction";
@@ -34,6 +37,10 @@ import {
 const rpc = process.env.SWIG_TEST_RPC_URL;
 const bundlerRpc = process.env.SWIG_TEST_BUNDLER_URL;
 const artifacts = process.env.SWIG_TEST_ARTIFACTS;
+const strictRpc = process.env.SWIG_TEST_STRICT_BUNDLER_URL;
+const context = process.env.SWIG_TEST_BUNDLER_CONTEXT;
+assert(strictRpc && context);
+assert.equal(new URL(strictRpc).hostname, "127.0.0.1");
 assert(
   rpc && bundlerRpc && artifacts,
   "Set local test RPC, bundler URL, and contract artifacts",
@@ -79,7 +86,7 @@ async function deploy(
   const receipt = await client.waitForTransactionReceipt({ hash });
   assert.equal(receipt.status, "success");
   assert(receipt.contractAddress);
-  return receipt.contractAddress;
+  return getAddress(receipt.contractAddress);
 }
 async function mined(hash: Hex): Promise<void> {
   assert.equal(
@@ -88,7 +95,7 @@ async function mined(hash: Hex): Promise<void> {
   );
 }
 
-const modules = await deploy("SwigConfigModules", [entryPoint08Address]);
+const modules = await deploy("SwigConfigModules", [entryPoint09Address]);
 const configImpl = await deploy("SwigConfig", [modules]);
 const vaultImpl = await deploy("SwigVault");
 const capsuleImpl = await deploy("SwigCapsule");
@@ -120,11 +127,22 @@ const address = await factory.read.computeConfigAddress(creation);
 const vault = await factory.read.computeVaultAddress(creation);
 await mined(await factory.write.deploy(creation, { value: 1_000_000n }));
 const config = getSwigConfig(address, { public: client, wallet });
-const sponsor = await deploy("Swig4337Sponsor", [entryPoint08Address]);
+const secondArgs = [
+  stringToHex("inactive", { size: 32 }),
+  creation[1],
+  creation[2],
+  creation[3],
+  creation[4],
+  creation[5],
+] as const;
+const secondAddress = await factory.read.computeConfigAddress(secondArgs);
+await mined(await factory.write.deploy(secondArgs, { value: 1_000_000n }));
+const beacon = await factory.read.configBeacon();
+const sponsor = await deploy("Swig4337Sponsor", [entryPoint09Address]);
 await mined(
   await wallet.writeContract({
-    address: entryPoint08Address,
-    abi: entryPoint08Abi,
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
     functionName: "depositTo",
     args: [sponsor],
     value: 10n ** 18n,
@@ -147,6 +165,50 @@ const bundler = createBundlerClient({
   transport: http(bundlerRpc),
   pollingInterval: 100,
 });
+const strictBundler = createBundlerClient({
+  account,
+  client,
+  transport: http(strictRpc),
+});
+// The runner starts both bundlers after learning the exact account to admit.
+await writeFile(`${context}.tmp`, JSON.stringify({ account: address }));
+await rename(`${context}.tmp`, context);
+const startupDeadline = Date.now() + 90_000;
+for (;;) {
+  try {
+    assert.deepEqual(await bundler.getSupportedEntryPoints(), [
+      entryPoint09Address,
+    ]);
+    assert.deepEqual(await strictBundler.getSupportedEntryPoints(), [
+      entryPoint09Address,
+    ]);
+    break;
+  } catch (error) {
+    if (Date.now() > startupDeadline) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+}
+async function rejectsBeaconRead(
+  action: () => Promise<unknown>,
+): Promise<void> {
+  await assert.rejects(action, (error: unknown) => {
+    if (!(error instanceof BaseError)) return false;
+    const cause = error.walk((nested) => nested instanceof RpcRequestError);
+    if (!(cause instanceof RpcRequestError) || cause.code !== -32502)
+      return false;
+    const data = cause.data;
+    return (
+      typeof data === "object" &&
+      data !== null &&
+      "accessedAddress" in data &&
+      data.accessedAddress === beacon.toLowerCase() &&
+      "slot" in data &&
+      data.slot === "0x0" &&
+      "accessingEntity" in data &&
+      data.accessingEntity === "account"
+    );
+  });
+}
 const common = {
   maxFeePerGas: 2_000_000_000n,
   maxPriorityFeePerGas: 1_000_000_000n,
@@ -162,19 +224,25 @@ assert(prepared.callGasLimit > 0n && prepared.verificationGasLimit > 0n);
 const signature = await account.signUserOperation(prepared);
 const packed = toPackedUserOperation({ ...prepared, signature });
 const expectedHash = await client.readContract({
-  address: entryPoint08Address,
-  abi: entryPoint08Abi,
+  address: entryPoint09Address,
+  abi: entryPoint09Abi,
   functionName: "getUserOpHash",
   args: [packed],
 });
 const beforeVault = await client.getBalance({ address: vault });
 const beforeSponsor = await client.readContract({
-  address: entryPoint08Address,
-  abi: entryPoint08Abi,
+  address: entryPoint09Address,
+  abi: entryPoint09Abi,
   functionName: "balanceOf",
   args: [sponsor],
 });
 
+// The same signed operation is rejected by canonical policy for the beacon slot.
+await rejectsBeaconRead(() =>
+  strictBundler.sendUserOperation({ ...prepared, signature }),
+);
+assert.equal(await account.getNonce(), prepared.nonce);
+assert.equal(await client.getBalance({ address: vault }), beforeVault);
 const hash = await bundler.sendUserOperation({ ...prepared, signature });
 assert.equal(hash, expectedHash);
 const receipt = await bundler.waitForUserOperationReceipt({
@@ -186,8 +254,8 @@ assert(receipt.actualGasCost > 0n);
 assert.equal(await client.getBalance({ address: vault }), beforeVault - 25n);
 assert(
   (await client.readContract({
-    address: entryPoint08Address,
-    abi: entryPoint08Abi,
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
     functionName: "balanceOf",
     args: [sponsor],
   })) < beforeSponsor,
@@ -288,8 +356,8 @@ assert.equal(await config.read.authorizationNonce([sessionRole]), 1n);
 // will fail during execution. Included failure still consumes a nonce and pays gas.
 const failureBefore = await client.getBalance({ address: vault });
 const failureSponsorBefore = await client.readContract({
-  address: entryPoint08Address,
-  abi: entryPoint08Abi,
+  address: entryPoint09Address,
+  abi: entryPoint09Abi,
   functionName: "balanceOf",
   args: [sponsor],
 });
@@ -315,8 +383,8 @@ assert.equal(
 assert.equal(await config.read.authorizationNonce([sessionRole]), 1n);
 assert(
   (await client.readContract({
-    address: entryPoint08Address,
-    abi: entryPoint08Abi,
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
     functionName: "balanceOf",
     args: [sponsor],
   })) < failureSponsorBefore,
@@ -329,8 +397,8 @@ const invalid = await bundler.prepareUserOperation({
 });
 const invalidBefore = await client.getBalance({ address: vault });
 const invalidSponsorBefore = await client.readContract({
-  address: entryPoint08Address,
-  abi: entryPoint08Abi,
+  address: entryPoint09Address,
+  abi: entryPoint09Abi,
   functionName: "balanceOf",
   args: [sponsor],
 });
@@ -357,16 +425,137 @@ await assert.rejects(
 assert.equal(await client.getBalance({ address: vault }), invalidBefore);
 assert.equal(
   await client.readContract({
-    address: entryPoint08Address,
-    abi: entryPoint08Abi,
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
     functionName: "balanceOf",
     args: [sponsor],
   }),
   invalidSponsorBefore,
 );
+// An account on the same beacon without an explicit exception remains rejected.
+const unlisted = await toSwigSmartAccount({
+  client,
+  address: secondAddress,
+  roleId: 0,
+  signer,
+  ...validity,
+});
+await rejectsBeaconRead(() =>
+  bundler.sendUserOperation({
+    account: unlisted,
+    calls: [{ to: recipient, value: 1n }],
+    ...common,
+    callGasLimit: 200_000n,
+    verificationGasLimit: 300_000n,
+    preVerificationGas: 100_000n,
+  }),
+);
+assert.equal(await unlisted.getNonce(), 0n);
+
+// Hold a real submitted operation in the mempool while governance upgrades the fleet.
+const debug = createClient({
+  transport: http(bundlerRpc),
+  rpcSchema:
+    rpcSchema<
+      [
+        {
+          Method: "debug_bundler_setBundlingMode";
+          Parameters: ["manual" | "auto"];
+          ReturnType: string;
+        },
+        {
+          Method: "debug_bundler_dumpMempool";
+          Parameters: [Address];
+          ReturnType: { sender: Address; nonce: Hex }[];
+        },
+        {
+          Method: "debug_bundler_sendBundleNow";
+          Parameters: [];
+          ReturnType: Hex;
+        },
+      ]
+    >(),
+});
+await debug.request({
+  method: "debug_bundler_setBundlingMode",
+  params: ["manual"],
+});
+const pending = await bundler.prepareUserOperation({
+  calls: [{ to: recipient, value: 7n }],
+  ...common,
+});
+const pendingHash = await bundler.sendUserOperation({
+  ...pending,
+  signature: await account.signUserOperation(pending),
+});
+const queued = await debug.request({
+  method: "debug_bundler_dumpMempool",
+  params: [entryPoint09Address],
+});
+assert(
+  queued.some(
+    (op) =>
+      op.sender.toLowerCase() === address.toLowerCase() &&
+      BigInt(op.nonce) === pending.nonce,
+  ),
+);
+const upgradeBalance = await client.getBalance({ address: vault });
+const newModules = await deploy("SwigConfigModules", [entryPoint09Address]);
+const replacement = await deploy("SwigConfig", [newModules]);
+await mined(
+  await wallet.writeContract({
+    address: controller,
+    abi: parseAbi(["function upgradeBeacon(address,address)"]),
+    functionName: "upgradeBeacon",
+    args: [beacon, replacement],
+  }),
+);
+assert.equal(
+  await client.readContract({
+    address: beacon,
+    abi: parseAbi(["function implementation() view returns(address)"]),
+    functionName: "implementation",
+  }),
+  replacement,
+);
+const replacementSignV2 = await client.readContract({
+  address: replacement,
+  abi: parseAbi(["function signV2Module() view returns(address)"]),
+  functionName: "signV2Module",
+});
+for (const upgraded of [address, secondAddress]) {
+  assert.equal(
+    await client.readContract({
+      address: upgraded,
+      abi: parseAbi(["function signV2Module() view returns(address)"]),
+      functionName: "signV2Module",
+    }),
+    replacementSignV2,
+  );
+}
+await debug.request({ method: "debug_bundler_sendBundleNow", params: [] });
+assert.equal(
+  (
+    await bundler.waitForUserOperationReceipt({
+      hash: pendingHash,
+      timeout: 30_000,
+    })
+  ).success,
+  true,
+);
+assert.equal(await client.getBalance({ address: vault }), upgradeBalance - 7n);
+assert.equal(await account.getNonce(), pending.nonce + 1n);
+await debug.request({
+  method: "debug_bundler_setBundlingMode",
+  params: ["auto"],
+});
 console.log(
   JSON.stringify({
-    entryPoint: entryPoint08Address,
+    entryPoint: entryPoint09Address,
+    canonicalPolicy: "beacon slot rejected",
+    alternativePolicy: "per-account notStaked exception; tracing enabled",
+    unlistedAccount: "rejected",
+    pendingUpgradeUserOpHash: pendingHash,
     account: address,
     userOpHash: hash,
     capsuleUserOpHash: capsuleHash,

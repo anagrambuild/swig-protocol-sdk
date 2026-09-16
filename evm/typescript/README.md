@@ -74,7 +74,9 @@ const receipt = await bundler.waitForUserOperationReceipt({ hash });
 ```
 
 The adapter only owns Swig calldata encoding, role-keyed nonce access, stub
-signature generation, and upstream v0.8 EIP-712 signing. Existing Viem-compatible
+signature generation, and upstream v0.9 EIP-712 signing. The account must already
+use the canonical v0.9 EntryPoint; older releases are rejected explicitly and
+require a governance-controlled fleet upgrade before using this adapter. Existing Viem-compatible
 bundler and paymaster clients own fee/gas estimation, sponsorship, submission,
 and receipts. There is no Swig bundler client, custom gas estimator, retry loop,
 or replacement UserOperation model. Explicit paymaster fields also work through
@@ -87,7 +89,7 @@ the contract enforces permissions and cleanup. The adapter never infers token
 outputs or approvals. Both forms still use `account.encodeCalls` and the same
 standard bundler methods.
 
-`validAfter` is exclusive and `validUntil` inclusive; active session expiration
+`validAfter` is exclusive and `validUntil` inclusive; both are Unix seconds in the uint47 range (the v0.9 block-number flag is unsupported); active session expiration
 can shorten the deadline. Encoding reads the role's current direct-authorization
 nonce. Role changes, session rotation, or signed direct activity can invalidate
 a prepared operation; rebuild and re-estimate it through the existing client.
@@ -97,24 +99,46 @@ gas, counterfactual deployment, batches, direct P-256/Ed25519/ProgramExec
 UserOperations, ERC-1271 message signing, and generic typed-data signing are not
 supported by this adapter.
 
-### Verification and deployment gate
+### Verification and deployment policy
 
-Run `python3 evm/scripts/test-4337.py --contracts-repo /path/to/swig-dev-portal
---mode alternative` from the SDK root, with Bun, Foundry, npm, and Docker on PATH.
-The runner builds the pinned contract revision, starts disposable Geth 1.15.11
-and Alto 1.2.7 containers pinned by image digest, deploys the canonical v0.8
-EntryPoint, and verifies estimation, signing, submission, receipts, sponsor
-charging, normal/capsule/session execution, included-failure rollback and nonce
-consumption, exact signature-error rejection, and
-continued direct SignV2 use. Only public development keys and local funds are
-used, and containers are removed afterward.
+Run from the SDK root, with Bun, Foundry, npm, Docker, and Solidity 0.8.28 installed:
 
-**Alternative mode disables Alto's ERC-7562 trace checks; it does not prove
-public-bundler acceptance.** Strict mode is the default and remains a release
-gate. The current beacon proxy reads shared beacon storage during validation.
-A separate deployment decision is required before claiming standard-mempool
-compatibility. On the tested Alto version, strict submission first failed with
-an upstream simulator-result decoding error (`0x99410554`); that failure is not
-counted as an expected storage rejection or as a passing test. Gas estimation
-with a stub signature succeeded. The runner fails visibly in strict mode and
-never falls back automatically.
+```sh
+python3 evm/scripts/test-4337.py --contracts-repo /path/to/swig-dev-portal \
+  --solc09 /path/to/solc-0.8.28
+```
+
+The runner builds the pinned contract revision and deploys the official v0.9
+EntryPoint from source, with its release compiler settings and CREATE2 salt.
+It verifies the canonical address `0x433709009B8330FDa32311DF1C2AFA402eD8D009`.
+Geth 1.15.11 and Rundler 0.11.0 are pinned by image digest. Public development
+keys and disposable local funds are used; processes and containers are removed
+when the run ends.
+
+Two unmodified Rundler instances run with tracing enabled. Canonical policy
+must reject the shared beacon's slot-zero read with the specific RPC error and
+storage location. The compatible instance adds a `notStaked` exception for one
+explicitly registered Swig account address. It verifies ordinary/capsule/session
+operations, stub estimation, real signing, sponsor charges, included-failure
+rollback and nonce consumption, invalid-signature rejection, and direct SignV2.
+An unregistered account on the same beacon must remain rejected. A submitted
+operation is held in the mempool while governance upgrades the shared beacon;
+both active and inactive accounts pick up the new modules, and the compatible
+pending operation completes after the upgrade.
+
+The account exception is broader than permitting only beacon slot zero: Rundler
+treats that registered account as staked for validation/reputation rules. Other
+validation checks remain enabled. This is an explicit private/alternative-mempool
+policy, not canonical public-mempool support. Register only verified Swig account
+addresses, review the trusted beacon governance and each implementation release,
+and revalidate pending operations after upgrades. Do not use a wildcard exception,
+`--unsafe`, or `--enable_unsafe_fallback` as a production substitute.
+
+The [accepted design](https://app.notion.com/p/3d17eb3c766d8172b6aaef6ccd59aad2)
+retains fleet-wide shared-beacon upgrades and accepts compatible-bundler routing.
+This local test does not select a hosted provider, deploy a production bundler,
+or establish a production paymaster policy. Before rollout, verify the actual
+chain's EntryPoint code, register the fleet in the chosen bundler policy, and test
+the real sponsor. The fixture sponsor is deliberately unrestricted and is never
+suitable for real funds. Changing EntryPoint requires rebuilding and re-signing
+pending operations and separately handling old EntryPoint deposits/nonces.
