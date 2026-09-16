@@ -3,7 +3,7 @@
 `swig-evm` provides Alloy-generated RPC bindings and concrete protocol codecs.
 The crate is currently unpublished. Use a local path dependency on this directory
 and configure Alloy's transport/signer features in your application. The SDK's
-Alloy dependency enables only `std` and `contract`.
+Alloy dependency enables `std`, `contract`, and `rpc-types`.
 
 With your own configured `provider` and typed contract/delegate addresses:
 
@@ -49,3 +49,25 @@ for supported permissions/authorities, recurring state, and signing semantics.
 The crate does not orchestrate transactions, manage nonce races, or select
 deployment addresses. ABI JSON is included in the Cargo package; building it
 does not require Solidity tooling or another repository.
+
+## ERC-4337 v0.9
+
+`smart_account::SwigSmartAccount` adds ordinary SignV2 and explicit capsule
+UserOperation encoding for deployed secp256k1 roles and active EVM sessions.
+`encode_call` takes a fresh direct-authorization nonce and one `CallExecution`.
+Read the EntryPoint nonce using `getNonceCall` with the role ID as its key.
+`pack_user_operation` converts Alloy's native unpacked RPC operation into the
+contract tuple, checking uint128 gas fields and requiring sponsorship.
+
+`user_operation_hash` accepts an Alloy `DynProvider`, verifies the configured
+chain and live account EntryPoint, validates the operation envelope, and calls
+canonical v0.9 `getUserOpHash`. The caller signs its raw digest with its existing
+signer and submits through its bundler client. This keeps v0.9 hashing, including
+paymaster suffix handling, in EntryPoint. There is no custom hash implementation,
+RPC transport, key custody, nonce reservation, or automatic retry in the SDK.
+
+Validity is Unix seconds within uint47: exclusive start and inclusive nonzero
+end. One operation executes one call; capsule funding/sweep manifests are explicit.
+Factory creation and account-funded gas are outside this adapter's current scope.
+See [runnable examples](examples/README.md) and the TypeScript package's
+[deployment policy](../typescript/README.md#verification-and-deployment-policy).
