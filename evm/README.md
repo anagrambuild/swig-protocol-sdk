@@ -17,8 +17,8 @@ ProgramExec authorization has a small envelope helper for
 `abi.encode(uint32(1), bytes(proof))`. Proof generation is supplied by the caller.
 The contract ABI supports bounded sessions. The pure authority/role codecs retain
 session discriminants for identification but still reject session variants;
-use the raw typed contract bindings for session creation and inspection. The
-TypeScript Smart Account adapter accepts an already active EVM session key.
+use the raw typed contract bindings for session creation and inspection.
+A TypeScript Smart Account adapter is a separate follow-up.
 
 A decoded role contains its ID, decoded authority, and action count. Decoding
 performs no RPC calls. Fetch individual actions through `getAction` and decode
