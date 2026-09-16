@@ -88,7 +88,7 @@ runtime runner is local because the pinned contracts repository is private;
 the SDK CI has no credential for it.
 
 For ERC-4337 and all three languages' examples, use the Compose runner with
-Anvil and Rundler described in the [integration guide](evm/integration/README.md):
+Anvil and Rundler described in the [integration guide](evm/typescript/README.md#verification-and-deployment-policy):
 
 ```bash
 evm/scripts/test-4337.sh /path/to/swig-dev-portal

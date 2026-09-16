@@ -15,9 +15,8 @@ and signature/proof acceptance remain contract responsibilities.
 
 ProgramExec authorization has a small envelope helper for
 `abi.encode(uint32(1), bytes(proof))`. Proof generation is supplied by the caller.
-The contract ABI supports bounded sessions. The pure authority/role codecs retain
-session variants as unsupported;
-use the raw typed contract bindings for session creation and inspection.
+The contract ABI supports bounded sessions. The pure authority/role codecs reject
+session variants; use the raw typed contract bindings for session creation and inspection.
 Each language also provides a thin sponsored ERC-4337 v0.9 adapter for
 already deployed accounts and secp256k1 roles or active sessions.
 

@@ -55,7 +55,7 @@ Shared-beacon accounts require the agreed compatible mempool policy. A fleet
 upgrade can evict queued operations and affect account reputation; the operator
 coordinates maintenance, then callers prepare and submit again. The SDK does
 not reset reputation or retry an authorization. See the
-[integration guide](../integration/README.md) for the observed Rundler behavior.
+[integration guide](../typescript/README.md#verification-and-deployment-policy) for the observed Rundler behavior.
 
 ## Examples and checks
 
