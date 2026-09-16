@@ -51,7 +51,8 @@ cargo run --locked -p swig-evm --example send_transfer
 ```
 
 Select the delegate's `SIGNER_PRIVATE_KEY`, retain its `ROLE_ID`, and set
-`RECIPIENT` and `VALUE_WEI`. This sends native currency from the wallet's vault
+`RECIPIENT` to an EOA with no contract code and `VALUE_WEI` to a positive amount
+within the role's remaining allowance. This sends native currency from the wallet's vault
 through SignV2 and consumes the role's allowance. The delegate EOA pays gas;
 fund its EOA separately from the vault. The example waits for a successful
 transaction receipt.
