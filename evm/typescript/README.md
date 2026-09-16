@@ -104,7 +104,8 @@ Run `python3 evm/scripts/test-4337.py --contracts-repo /path/to/swig-dev-portal
 The runner builds the pinned contract revision, starts disposable Geth 1.15.11
 and Alto 1.2.7 containers pinned by image digest, deploys the canonical v0.8
 EntryPoint, and verifies estimation, signing, submission, receipts, sponsor
-charging, normal/capsule/session execution, invalid-signature rejection, and
+charging, normal/capsule/session execution, included-failure rollback and nonce
+consumption, exact signature-error rejection, and
 continued direct SignV2 use. Only public development keys and local funds are
 used, and containers are removed afterward.
 

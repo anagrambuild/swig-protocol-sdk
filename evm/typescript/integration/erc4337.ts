@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   type Abi,
   type Address,
+  BaseError,
   createPublicClient,
   createWalletClient,
   defineChain,
@@ -11,6 +12,7 @@ import {
   type Hex,
   http,
   parseAbi,
+  RpcRequestError,
   stringToHex,
 } from "viem";
 import {
@@ -18,6 +20,7 @@ import {
   entryPoint08Abi,
   entryPoint08Address,
   toPackedUserOperation,
+  UserOperationSignatureError,
 } from "viem/account-abstraction";
 import { mnemonicToAccount } from "viem/accounts";
 import {
@@ -281,6 +284,43 @@ assert.equal(
   (BigInt(sessionRole) << 64n) + 1n,
 );
 assert.equal(await config.read.authorizationNonce([sessionRole]), 1n);
+// Supply gas explicitly so the bundler includes an operation whose policy check
+// will fail during execution. Included failure still consumes a nonce and pays gas.
+const failureBefore = await client.getBalance({ address: vault });
+const failureSponsorBefore = await client.readContract({
+  address: entryPoint08Address,
+  abi: entryPoint08Abi,
+  functionName: "balanceOf",
+  args: [sponsor],
+});
+const failedHash = await bundler.sendUserOperation({
+  account: sessionAccount,
+  calls: [{ to: recipient, value: 101n }],
+  ...common,
+  callGasLimit: 200_000n,
+  verificationGasLimit: 200_000n,
+  preVerificationGas: 100_000n,
+});
+const failedReceipt = await bundler.waitForUserOperationReceipt({
+  hash: failedHash,
+  timeout: 30_000,
+});
+assert.equal(failedReceipt.success, false);
+assert(failedReceipt.actualGasCost > 0n);
+assert.equal(await client.getBalance({ address: vault }), failureBefore);
+assert.equal(
+  await sessionAccount.getNonce(),
+  (BigInt(sessionRole) << 64n) + 2n,
+);
+assert.equal(await config.read.authorizationNonce([sessionRole]), 1n);
+assert(
+  (await client.readContract({
+    address: entryPoint08Address,
+    abi: entryPoint08Abi,
+    functionName: "balanceOf",
+    args: [sponsor],
+  })) < failureSponsorBefore,
+);
 // Real submission must reject the estimation stub without spending custody or gas deposit.
 const invalid = await bundler.prepareUserOperation({
   account: sessionAccount,
@@ -288,6 +328,12 @@ const invalid = await bundler.prepareUserOperation({
   ...common,
 });
 const invalidBefore = await client.getBalance({ address: vault });
+const invalidSponsorBefore = await client.readContract({
+  address: entryPoint08Address,
+  abi: entryPoint08Abi,
+  functionName: "balanceOf",
+  args: [sponsor],
+});
 await assert.rejects(
   async () =>
     bundler.sendUserOperation({
@@ -295,9 +341,29 @@ await assert.rejects(
       account: sessionAccount,
       signature: await sessionAccount.getStubSignature(),
     }),
-  /signature|AA24/i,
+  (error: unknown) => {
+    if (!(error instanceof BaseError)) return false;
+    const cause = error.walk(
+      (nested) =>
+        (nested instanceof RpcRequestError && nested.code === -32507) ||
+        nested instanceof UserOperationSignatureError,
+    );
+    return (
+      (cause instanceof RpcRequestError && cause.code === -32507) ||
+      cause instanceof UserOperationSignatureError
+    );
+  },
 );
 assert.equal(await client.getBalance({ address: vault }), invalidBefore);
+assert.equal(
+  await client.readContract({
+    address: entryPoint08Address,
+    abi: entryPoint08Abi,
+    functionName: "balanceOf",
+    args: [sponsor],
+  }),
+  invalidSponsorBefore,
+);
 console.log(
   JSON.stringify({
     entryPoint: entryPoint08Address,
@@ -306,6 +372,7 @@ console.log(
     capsuleUserOpHash: capsuleHash,
     estimation: "stub signature",
     sessionUserOpHash: sessionHash,
+    failedUserOpHash: failedHash,
     inclusion: "normal, capsule, and session",
     invalidSignature: "rejected",
     direct: "passed",
