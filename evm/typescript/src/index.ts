@@ -29,3 +29,8 @@ export {
   type RecurringLimit,
 } from "./permissions.js";
 export { decodeRole, ROOT_ROLE_ID, type Role, type RoleData } from "./roles.js";
+export {
+  type SwigSmartAccount,
+  type ToSwigSmartAccountParameters,
+  toSwigSmartAccount,
+} from "./smartAccount.js";
