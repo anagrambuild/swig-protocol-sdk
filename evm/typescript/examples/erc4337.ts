@@ -57,8 +57,9 @@ const bundler = createBundlerClient({
 // For the disposable Compose fixture only. A real sponsor supplies its own ERC-7677 data.
 const localPaymaster = process.env.TEST_PAYMASTER_ADDRESS;
 assert(
-  PAYMASTER_URL || (chainId === 1337 && localPaymaster),
-  "Supply PAYMASTER_URL",
+  (PAYMASTER_URL && !localPaymaster) ||
+    (!PAYMASTER_URL && chainId === 1337 && localPaymaster),
+  "Supply PAYMASTER_URL, or only TEST_PAYMASTER_ADDRESS on the disposable chain",
 );
 const fees = await client.estimateFeesPerGas();
 const hash = await bundler.sendUserOperation({
