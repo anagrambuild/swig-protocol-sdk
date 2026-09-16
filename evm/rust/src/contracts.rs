@@ -11,6 +11,8 @@ pub mod config {
     );
 }
 
+// Generated session-deployment signatures must retain all eight contract ABI inputs.
+#[allow(clippy::too_many_arguments)]
 pub mod factory {
     alloy::sol!(
         #[sol(rpc)]

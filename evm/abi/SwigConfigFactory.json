@@ -170,6 +170,189 @@
   },
   {
     "type": "function",
+    "name": "computeSessionCapsuleAddress",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "computeSessionConfigAddress",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "computeSessionVaultAddress",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "computeVaultAddress",
     "inputs": [
       {
@@ -278,6 +461,72 @@
         "name": "rootAuthorityKeyExtra",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "config",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "vault",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "deploySessionRoot",
+    "inputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
       },
       {
         "name": "rootActions",
