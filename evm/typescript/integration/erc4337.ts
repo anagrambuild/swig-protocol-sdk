@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, rename, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   type Abi,
@@ -16,7 +16,6 @@ import {
   parseAbi,
   RpcRequestError,
   rpcSchema,
-  stringToHex,
 } from "viem";
 import {
   createBundlerClient,
@@ -30,7 +29,6 @@ import {
   encodeAuthority,
   encodePermission,
   getSwigConfig,
-  getSwigConfigFactory,
   toSwigSmartAccount,
 } from "../src/index.js";
 
@@ -49,7 +47,7 @@ assert.equal(new URL(rpc).hostname, "127.0.0.1");
 assert.equal(new URL(bundlerRpc).hostname, "127.0.0.1");
 const chain = defineChain({
   id: 1337,
-  name: "Isolated Geth",
+  name: "Isolated Anvil",
   nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
   rpcUrls: { default: { http: [rpc] } },
 });
@@ -95,59 +93,20 @@ async function mined(hash: Hex): Promise<void> {
   );
 }
 
-const modules = await deploy("SwigConfigModules", [entryPoint09Address]);
-const configImpl = await deploy("SwigConfig", [modules]);
-const vaultImpl = await deploy("SwigVault");
-const capsuleImpl = await deploy("SwigCapsule");
-const controller = await deploy("SwigBeaconController", [signer.address]);
-const factoryAddress = await deploy("SwigConfigFactory", [
-  configImpl,
-  vaultImpl,
-  capsuleImpl,
-  "0x0000000000000000000000000000000000000100",
-  controller,
-]);
-const factory = getSwigConfigFactory(factoryAddress, {
-  public: client,
-  wallet,
-});
+const { address, vault, secondAddress, beacon, sponsor, controller } =
+  JSON.parse(await readFile(context, "utf8")) as {
+    address: Address;
+    vault: Address;
+    secondAddress: Address;
+    beacon: Address;
+    sponsor: Address;
+    controller: Address;
+  };
+const config = getSwigConfig(address, { public: client, wallet });
 const authority = encodeAuthority({
   type: "secp256k1",
   address: signer.address,
 });
-const creation = [
-  stringToHex("4337", { size: 32 }),
-  stringToHex("adapter", { size: 32 }),
-  authority.authorityType,
-  authority.key,
-  authority.keyExtra,
-  [encodePermission({ type: "all" }), encodePermission({ type: "programAll" })],
-] as const;
-const address = await factory.read.computeConfigAddress(creation);
-const vault = await factory.read.computeVaultAddress(creation);
-await mined(await factory.write.deploy(creation, { value: 1_000_000n }));
-const config = getSwigConfig(address, { public: client, wallet });
-const secondArgs = [
-  stringToHex("inactive", { size: 32 }),
-  creation[1],
-  creation[2],
-  creation[3],
-  creation[4],
-  creation[5],
-] as const;
-const secondAddress = await factory.read.computeConfigAddress(secondArgs);
-await mined(await factory.write.deploy(secondArgs, { value: 1_000_000n }));
-const beacon = await factory.read.configBeacon();
-const sponsor = await deploy("Swig4337Sponsor", [entryPoint09Address]);
-await mined(
-  await wallet.writeContract({
-    address: entryPoint09Address,
-    abi: entryPoint09Abi,
-    functionName: "depositTo",
-    args: [sponsor],
-    value: 10n ** 18n,
-  }),
-);
 const validity = {
   validAfter: 0,
   validUntil: Number((await client.getBlock()).timestamp) + 3600,
@@ -170,9 +129,7 @@ const strictBundler = createBundlerClient({
   client,
   transport: http(strictRpc),
 });
-// The runner starts both bundlers after learning the exact account to admit.
-await writeFile(`${context}.tmp`, JSON.stringify({ account: address }));
-await rename(`${context}.tmp`, context);
+// Compose starts both bundlers after the deployed account policy is written.
 const startupDeadline = Date.now() + 90_000;
 for (;;) {
   try {
@@ -276,6 +233,7 @@ const capsuleAccount = await toSwigSmartAccount({
 });
 const capsuleHash = await bundler.sendUserOperation({
   account: capsuleAccount,
+  verificationGasLimit: 200_000n,
   calls: [
     {
       to: target,
@@ -469,6 +427,29 @@ const debug = createClient({
           ReturnType: { sender: Address; nonce: Hex }[];
         },
         {
+          Method: "debug_bundler_dumpReputation";
+          Parameters: [Address];
+          ReturnType: {
+            address: Address;
+            opsSeen: number;
+            opsIncluded: number;
+            status: number;
+          }[];
+        },
+        {
+          Method: "debug_bundler_setReputation";
+          Parameters: [
+            { address: Address; opsSeen: number; opsIncluded: number }[],
+            Address,
+          ];
+          ReturnType: string;
+        },
+        {
+          Method: "debug_bundler_dumpPaymasterBalances";
+          Parameters: [Address];
+          ReturnType: { address: Address; confirmedBalance: Hex }[];
+        },
+        {
           Method: "debug_bundler_sendBundleNow";
           Parameters: [];
           ReturnType: Hex;
@@ -483,7 +464,17 @@ await debug.request({
 const pending = await bundler.prepareUserOperation({
   calls: [{ to: recipient, value: 7n }],
   ...common,
+  verificationGasLimit: 200_000n,
 });
+const reputationBefore = await debug.request({
+  method: "debug_bundler_dumpReputation",
+  params: [entryPoint09Address],
+});
+const accountReputation = reputationBefore.find(
+  (item) => item.address.toLowerCase() === address.toLowerCase(),
+);
+assert(accountReputation);
+console.log("Queueing operation before fleet upgrade");
 const pendingHash = await bundler.sendUserOperation({
   ...pending,
   signature: await account.signUserOperation(pending),
@@ -499,6 +490,7 @@ assert(
       BigInt(op.nonce) === pending.nonce,
   ),
 );
+console.log(JSON.stringify({ pendingUpgradeUserOpHash: pendingHash }));
 const upgradeBalance = await client.getBalance({ address: vault });
 const newModules = await deploy("SwigConfigModules", [entryPoint09Address]);
 const replacement = await deploy("SwigConfig", [newModules]);
@@ -533,11 +525,101 @@ for (const upgraded of [address, secondAddress]) {
     replacementSignV2,
   );
 }
-await debug.request({ method: "debug_bundler_sendBundleNow", params: [] });
+// Observe a post-upgrade chain update in the pool, rather than racing its head polling.
+await mined(
+  await wallet.writeContract({
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
+    functionName: "depositTo",
+    args: [sponsor],
+    value: 1n,
+  }),
+);
+const deposit = await client.readContract({
+  address: entryPoint09Address,
+  abi: entryPoint09Abi,
+  functionName: "balanceOf",
+  args: [sponsor],
+});
+const headDeadline = Date.now() + 30_000;
+for (;;) {
+  const balances = await debug.request({
+    method: "debug_bundler_dumpPaymasterBalances",
+    params: [entryPoint09Address],
+  });
+  if (
+    balances.some(
+      (item) =>
+        item.address.toLowerCase() === sponsor.toLowerCase() &&
+        BigInt(item.confirmedBalance) === deposit,
+    )
+  )
+    break;
+  assert(
+    Date.now() < headDeadline,
+    "Bundler did not observe post-upgrade deposit",
+  );
+  await new Promise((resolve) => setTimeout(resolve, 100));
+}
+// Rundler revalidation rejects a changed validation code hash. A timeout is not evidence of rejection.
+const droppedBundle = await debug.request({
+  method: "debug_bundler_sendBundleNow",
+  params: [],
+});
+assert.equal(droppedBundle, `0x${"00".repeat(32)}`);
+assert.deepEqual(
+  await debug.request({
+    method: "debug_bundler_dumpMempool",
+    params: [entryPoint09Address],
+  }),
+  [],
+);
+assert.equal(await account.getNonce(), pending.nonce);
+assert.equal(await client.getBalance({ address: vault }), upgradeBalance);
+console.log(
+  "Queued operation removed after upgrade; rebuilding against the current fleet",
+);
+const rebuilt = await bundler.prepareUserOperation({
+  calls: [{ to: recipient, value: 7n }],
+  ...common,
+  verificationGasLimit: 200_000n,
+});
+const rebuiltSignature = await account.signUserOperation(rebuilt);
+await assert.rejects(
+  () => bundler.sendUserOperation({ ...rebuilt, signature: rebuiltSignature }),
+  (error: unknown) => {
+    if (!(error instanceof BaseError)) return false;
+    const cause = error.walk((item) => item instanceof RpcRequestError);
+    return cause instanceof RpcRequestError && cause.code === -32504;
+  },
+);
+// Operator maintenance after this verified governance upgrade, scoped to this account.
+await debug.request({
+  method: "debug_bundler_setReputation",
+  params: [
+    [
+      {
+        address,
+        opsSeen: accountReputation.opsSeen,
+        opsIncluded: accountReputation.opsIncluded,
+      },
+    ],
+    entryPoint09Address,
+  ],
+});
+const rebuiltHash = await bundler.sendUserOperation({
+  ...rebuilt,
+  signature: rebuiltSignature,
+});
+const rebuiltBundle = await debug.request({
+  method: "debug_bundler_sendBundleNow",
+  params: [],
+});
+assert.notEqual(rebuiltBundle, `0x${"00".repeat(32)}`);
 assert.equal(
   (
     await bundler.waitForUserOperationReceipt({
-      hash: pendingHash,
+      hash: rebuiltHash,
       timeout: 30_000,
     })
   ).success,
@@ -556,6 +638,9 @@ console.log(
     alternativePolicy: "per-account notStaked exception; tracing enabled",
     unlistedAccount: "rejected",
     pendingUpgradeUserOpHash: pendingHash,
+    pendingUpgrade:
+      "removed without execution; account reputation restored by operator; rebuilt operation included",
+    rebuiltUserOpHash: rebuiltHash,
     account: address,
     userOpHash: hash,
     capsuleUserOpHash: capsuleHash,

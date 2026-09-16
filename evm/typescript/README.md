@@ -104,14 +104,13 @@ supported by this adapter.
 Run from the SDK root, with Bun, Foundry, npm, Docker, and Solidity 0.8.28 installed:
 
 ```sh
-python3 evm/scripts/test-4337.py --contracts-repo /path/to/swig-dev-portal \
-  --solc09 /path/to/solc-0.8.28
+evm/scripts/test-4337.sh /path/to/swig-dev-portal
 ```
 
-The runner builds the pinned contract revision and deploys the official v0.9
+Docker Compose owns the nodes and cleanup; Forge builds the pinned contract revision and deploys the official v0.9
 EntryPoint from source, with its release compiler settings and CREATE2 salt.
 It verifies the canonical address `0x433709009B8330FDa32311DF1C2AFA402eD8D009`.
-Geth 1.15.11 and Rundler 0.11.0 are pinned by image digest. Public development
+Anvil 1.7.1 and Rundler 0.11.0 are pinned by image digest. Public development
 keys and disposable local funds are used; processes and containers are removed
 when the run ends.
 
@@ -123,15 +122,24 @@ operations, stub estimation, real signing, sponsor charges, included-failure
 rollback and nonce consumption, invalid-signature rejection, and direct SignV2.
 An unregistered account on the same beacon must remain rejected. A submitted
 operation is held in the mempool while governance upgrades the shared beacon;
-both active and inactive accounts pick up the new modules, and the compatible
-pending operation completes after the upgrade.
+both active and inactive accounts pick up the new modules. After the bundler
+observes the upgrade, code-hash revalidation drops the queued operation without
+spending its nonce or vault balance. Rundler also penalizes the account reputation,
+so the test verifies admission is blocked until the operator restores that one
+account to its pre-upgrade reputation. Rebuilding, signing, and resubmitting
+against the current implementation then succeeds. A receipt timeout does not count as proof
+of a dropped operation.
 
 The account exception is broader than permitting only beacon slot zero: Rundler
 treats that registered account as staked for validation/reputation rules. Other
 validation checks remain enabled. This is an explicit private/alternative-mempool
 policy, not canonical public-mempool support. Register only verified Swig account
 addresses, review the trusted beacon governance and each implementation release,
-and revalidate pending operations after upgrades. Do not use a wildcard exception,
+and coordinate upgrades: pause admissions/bundling and drain or discard affected
+pending operations. If code-hash revalidation penalizes a verified account during
+maintenance, restore only its captured reputation after verifying the governance
+upgrade, then rebuild and revalidate operations. The SDK never resets reputation
+or retries automatically. No user account-upgrade transaction is required. Do not use a wildcard exception,
 `--unsafe`, or `--enable_unsafe_fallback` as a production substitute.
 
 The [accepted design](https://app.notion.com/p/3d17eb3c766d8172b6aaef6ccd59aad2)
@@ -142,3 +150,14 @@ chain's EntryPoint code, register the fleet in the chosen bundler policy, and te
 the real sponsor. The fixture sponsor is deliberately unrestricted and is never
 suitable for real funds. Changing EntryPoint requires rebuilding and re-signing
 pending operations and separately handling old EntryPoint deposits/nonces.
+
+The runner uses the existing Foundry toolchain and standard Viem clients. It
+replaces the former Python process/RPC/compiler orchestration with a short shell
+sequence and declarative Compose services. [Alto's local setup](https://github.com/pimlicolabs/alto/blob/main/scripts/run-local-instance.sh)
+and [Prool](https://github.com/wevm/prool) also pair Anvil with a separate bundler;
+we retain Rundler for its verified v0.9 support and explicit account policy.
+The ordinary operation exercises stub-signature gas estimation. Capsule and
+upgrade fixtures set a verification-gas ceiling to provide headroom beyond
+Rundler's Anvil estimates; this is not a gas-efficiency benchmark.
+
+See [examples](examples/README.md) for runnable role reads and sponsored transfers.

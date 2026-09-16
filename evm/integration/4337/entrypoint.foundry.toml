@@ -1,0 +1,11 @@
+# Match eth-infinitism/account-abstraction v0.9.0 hardhat.config.ts exactly.
+# Canonical source names and an empty remappings list preserve CREATE2 metadata.
+[profile.default]
+src = "contracts"
+libs = []
+auto_detect_remappings = false
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 1000000
+via_ir = true
+evm_version = "cancun"
