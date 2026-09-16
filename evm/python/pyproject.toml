@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swig-evm"
+version = "0.1.0"
+description = "Thin Web3.py bindings and codecs for the EVM Swig protocol"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["web3>=8,<9", "eth-abi>=5.2,<7", "eth-account>=0.14,<0.15"]
+
+[project.urls]
+Repository = "https://github.com/anagrambuild/swig-protocol-sdk"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.15,<0.16"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/swig_evm"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

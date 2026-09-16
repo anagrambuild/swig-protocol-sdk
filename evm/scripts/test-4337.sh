@@ -51,3 +51,6 @@ bun run examples/erc4337.ts
 cd "$evm"
 cargo run --locked -p swig-evm --example read_role
 cargo run --locked -p swig-evm --example erc4337
+cd "$evm/python"
+uv run --locked python examples/read_role.py
+uv run --locked python examples/erc4337.py

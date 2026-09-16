@@ -7,7 +7,7 @@ capsule methods; a binding does not grant permission to call them.
 
 ## Authorities and roles
 
-Both packages encode/decode secp256k1 addresses, secp256r1 public-key coordinates,
+All three packages encode/decode secp256k1 addresses, secp256r1 public-key coordinates,
 Ed25519 public keys with verifier addresses, and ProgramExec verifier addresses.
 The codecs validate wire shape, canonical address padding, nonzero authority
 fields, and the ProgramExec version. Cryptographic key validity, verifier code,
@@ -16,9 +16,10 @@ and signature/proof acceptance remain contract responsibilities.
 ProgramExec authorization has a small envelope helper for
 `abi.encode(uint32(1), bytes(proof))`. Proof generation is supplied by the caller.
 The contract ABI supports bounded sessions. The pure authority/role codecs retain
-session discriminants for identification but still reject session variants;
+session variants as unsupported;
 use the raw typed contract bindings for session creation and inspection.
-A TypeScript Smart Account adapter is a separate follow-up.
+Each language also provides a thin sponsored ERC-4337 v0.9 adapter for
+already deployed accounts and secp256k1 roles or active sessions.
 
 A decoded role contains its ID, decoded authority, and action count. Decoding
 performs no RPC calls. Fetch individual actions through `getAction` and decode
@@ -43,14 +44,15 @@ codecs reject these unsupported variants. Raw ABI action tuples remain available
 for low-level callers who need to inspect them.
 
 Amounts and recurring fields are unsigned 64-bit base-unit integers (`bigint` in
-TypeScript and `u64` in Rust). Windows and reset timestamps are seconds. Amounts
+TypeScript, `u64` in Rust, and checked `int` in Python). Windows and reset timestamps are seconds. Amounts
 are not decimal token amounts. Payload integers are little-endian; addresses are
 left-padded to 32 bytes. TokenRecurringLimit has its own field order, captured in
 the shared fixtures.
 
 Recurring codecs preserve the full stored state, including `lastReset` and the
 remaining `currentAmount`. Use `createRecurringLimit(amount, window)` or
-`RecurringLimit::new(amount, window)` for a fresh permission: reset zero and the
+`RecurringLimit::new(amount, window)` / Python `RecurringLimit.new(amount, window)`
+for a fresh permission: reset zero and the
 full allowance available. Re-encoding a fetched permission preserves spent
 state; it does not reset an allowance or guarantee that the tuple is valid for
 new-role creation. In particular, general native/token recurring permissions
@@ -78,6 +80,8 @@ boundary when choosing transaction senders or aggregation mechanisms.
 
 `fixtures/permissions.json` uses distinct integer values and independently
 specified little-endian bytes, including amounts above JavaScript's safe integer
-range, uint64 maximum, and spent recurring state. Both languages consume the
+range, uint64 maximum, and spent recurring state. All three languages consume the
 same vectors. `fixtures/authorities.json` covers the four supported wire shapes;
 its coordinate/key placeholders are not cryptographic test vectors.
+`fixtures/4337.json` pins Viem-generated SignV2/capsule envelopes and canonical
+EntryPoint hash-call data, checked by the Rust and Python adapters.

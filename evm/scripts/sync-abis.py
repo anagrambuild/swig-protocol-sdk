@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Materialize the canonical ABIs for npm and Cargo packaging."""
+"""Materialize the canonical ABIs for npm, Cargo, and Python packaging."""
 
 import argparse
 import json
@@ -16,6 +16,7 @@ for name in ("SwigConfig", "SwigConfigFactory", "SwigVault", "SwigCapsule"):
     raw = (evm / "abi" / f"{name}.json").read_bytes()
     abi = json.loads(raw)
     generated[evm / "rust" / "abi" / f"{name}.json"] = raw
+    generated[evm / "python" / "src" / "swig_evm" / "abi" / f"{name}.json"] = raw
     export = name[0].lower() + name[1:] + "Abi"
     typescript += f"export const {export} = {json.dumps(abi, indent=2)} as const satisfies Abi;\n\n"
 generated[evm / "typescript" / "src" / "abi.ts"] = (typescript.rstrip() + "\n").encode()
