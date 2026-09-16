@@ -57,6 +57,7 @@ function typeContract(): void {
   // @ts-expect-error role IDs are uint32 numbers, not strings
   void config.read.getRole(["0"]);
   // @ts-expect-error session creation requires role, key, duration, and authorization
-  void config.read.createSession();
+  void config.write.createSession();
+  void config.write.createSession([0, `0x${"01".repeat(32)}`, 60n, "0x"]);
 }
 void typeContract;
