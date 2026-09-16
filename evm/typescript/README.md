@@ -160,4 +160,5 @@ The ordinary operation exercises stub-signature gas estimation. Capsule and
 upgrade fixtures set a verification-gas ceiling to provide headroom beyond
 Rundler's Anvil estimates; this is not a gas-efficiency benchmark.
 
-See [examples](examples/README.md) for runnable role reads and sponsored transfers.
+See [examples](examples/README.md) for wallet creation, adding and reading roles,
+and direct or sponsored transfers.

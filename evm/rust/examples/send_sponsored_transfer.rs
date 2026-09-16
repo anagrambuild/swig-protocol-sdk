@@ -69,7 +69,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         config.authorizationNonce(role_id).call().await?,
         CallExecution {
             target: recipient,
-            value: U256::from(1),
+            value: env::var("VALUE_WEI")
+                .unwrap_or_else(|_| "1".into())
+                .parse()?,
             data: Bytes::new(),
             tokenFunding: vec![],
             sweepTokens: vec![],
@@ -88,7 +90,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
             )
             .await?,
     )?;
-    let fees = provider.estimate_eip1559_fees().await?;
+    // The local Rundler has its own admission fee floor; use its advertised tip.
+    let priority_fee: U256 = bundler
+        .client()
+        .request("rundler_maxPriorityFeePerGas", ())
+        .await?;
+    let base_fee = block.header.base_fee_per_gas.ok_or("missing base fee")?;
     let mut operation = PackedUserOperation {
         sender: address,
         nonce,
@@ -98,8 +105,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         call_gas_limit: U256::from(500_000),
         verification_gas_limit: U256::from(200_000),
         pre_verification_gas: U256::from(100_000),
-        max_fee_per_gas: U256::from(fees.max_fee_per_gas),
-        max_priority_fee_per_gas: U256::from(fees.max_priority_fee_per_gas),
+        max_fee_per_gas: U256::from(base_fee) * U256::from(2) + priority_fee,
+        max_priority_fee_per_gas: priority_fee,
         paymaster: Some(paymaster),
         paymaster_verification_gas_limit: Some(U256::from(100_000)),
         paymaster_post_op_gas_limit: Some(U256::from(50_000)),

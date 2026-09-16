@@ -1,24 +1,86 @@
-# Python examples
+# Python wallet examples
 
-From `evm/python`, run `uv sync --locked` once.
+Run from `evm/python` after `uv sync --locked`. Every example is standalone and uses the
+language's native Ethereum library. Set `RPC_URL` to your chain and provide a
+`SIGNER_PRIVATE_KEY` for writes. Keep that key in your environment, outside source
+and logs. Direct transactions require gas in the signer's EOA.
 
-- `uv run --locked python examples/read_role.py`: reads a role. Set `RPC_URL`,
-  `ACCOUNT_ADDRESS`, and optional `ROLE_ID` (default `0`).
-- `uv run --locked python examples/erc4337.py`: submits a sponsored one-wei transfer
-  on the disposable Compose chain (1337). Also set `BUNDLER_URL`,
-  `SIGNER_PRIVATE_KEY`, `RECIPIENT`, and `TEST_PAYMASTER_ADDRESS`.
+## 1. Create a wallet
 
-`../scripts/test-4337.sh /path/to/swig-dev-portal` creates and funds the fixture,
-sets the public development key/addresses, and runs both examples. It also runs
-the TypeScript and Rust examples, so install Bun, Foundry, Docker, Rust, and uv.
+```bash
+uv run --locked python examples/create_wallet.py
+```
 
-Web3.py owns contract calls and JSON-RPC. `eth-account` owns signing. The adapter
-validates the Swig envelope and asks canonical EntryPoint v0.9 for its digest.
-The example signs only that prepared operation's digest without a message prefix;
-private keys remain in the application and are never printed.
+Set `FACTORY_ADDRESS`, `WALLET_NAME`, and `INITIAL_BALANCE_WEI` (zero is allowed).
+Use a factory matching the SDK's pinned contracts. The signer becomes root role
+0 with All permission; the initial native balance goes into the wallet vault.
+The example predicts the config address, waits for creation, checks the emitted
+address, and prints `accountAddress`, `vaultAddress`, and `capsuleAddress`.
 
-The fixture paymaster is unrestricted. For production, acquire current sponsored
-operation fields from your paymaster's supported client before signing, and use
-the agreed compatible bundler. The config must already exist and the authority
-key must control its chosen secp256k1 role or active session. Nonce coordination
-and fleet-upgrade maintenance are explicit caller/operator responsibilities.
+The name is public and hashed into the wallet ID and deployment salt. Choose a
+fresh name for each wallet: identical name/root settings target the same address,
+and deploying it twice reverts. Set `ACCOUNT_ADDRESS` to the printed config
+address for the next scenarios.
+
+## 2. Add a spending role
+
+```bash
+uv run --locked python examples/add_role.py
+```
+
+Keep the root signer selected. Set `DELEGATE_ADDRESS` to the new authority's EOA
+and `LIMIT_WEI` to its total native-currency allowance (uint64 base units).
+`MANAGER_ROLE_ID` defaults to 0 and must authorize role management. The role has
+a native spending limit and no management permission. The example reads the
+assigned `roleId` from the mined event; set `ROLE_ID` to that value.
+
+## 3. Read a role
+
+```bash
+uv run --locked python examples/read_role.py
+```
+
+Set `ACCOUNT_ADDRESS` and `ROLE_ID` (default 0). This read needs no signing key
+and prints the authority and action count. Individual permissions are available
+through the native config binding's `getAction` method and the permission codec.
+
+## 4. Send a transfer
+
+```bash
+uv run --locked python examples/send_transfer.py
+```
+
+Select the delegate's `SIGNER_PRIVATE_KEY`, retain its `ROLE_ID`, and set
+`RECIPIENT` and `VALUE_WEI`. This sends native currency from the wallet's vault
+through SignV2 and consumes the role's allowance. The delegate EOA pays gas;
+fund its EOA separately from the vault. The example waits for a successful
+transaction receipt.
+
+## 5. Send a sponsored transfer
+
+```bash
+uv run --locked python examples/send_sponsored_transfer.py
+```
+
+Use a deployed account registered with the compatible bundler and a key for its
+selected secp256k1 role or active session. Set `BUNDLER_URL`, `ACCOUNT_ADDRESS`,
+`ROLE_ID`, `RECIPIENT`, and optional `VALUE_WEI` (default 1). This version uses
+ERC-4337 v0.9: the authority signs, and the paymaster pays gas.
+This runnable example uses `TEST_PAYMASTER_ADDRESS` and requires the disposable
+Compose chain (1337). For production, obtain current sponsorship fields using
+your paymaster's client before signing and use the agreed compatible bundler.
+
+## Run every scenario locally
+
+From the repository root:
+
+```bash
+evm/scripts/test-4337.sh /path/to/swig-dev-portal
+```
+
+Install Bun, Foundry, Docker, Rust, and uv first. The runner owns a disposable
+Anvil/Rundler deployment and public development keys. It creates a fresh wallet
+per language, adds a limited delegate, reads that role, sends as the delegate,
+and verifies balances and remaining allowance. Sponsored transfers use the
+separately registered fixture account and verify successful inclusion. All 15
+examples run; no real wallet or production paymaster is used.

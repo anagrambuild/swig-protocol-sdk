@@ -38,19 +38,12 @@ bun run integration/deploy-4337.ts
 export SWIG_TEST_BUNDLER_URL="http://$("${compose[@]}" port compatible 3000)"
 export SWIG_TEST_STRICT_BUNDLER_URL="http://$("${compose[@]}" port strict 3000)"
 bun run integration/erc4337.ts
-# Exercise the public example entry points against the same funded fixture.
+# Exercise the public wallet scenarios in each language against the local deployment.
 unset PAYMASTER_URL
-export ROLE_ID=0 VALUE_WEI=1
 export RPC_URL="$SWIG_TEST_RPC_URL" BUNDLER_URL="$SWIG_TEST_BUNDLER_URL"
 export ACCOUNT_ADDRESS=$(bun -e 'console.log(require(process.argv[1]).address)' "$SWIG_TEST_BUNDLER_CONTEXT")
 export TEST_PAYMASTER_ADDRESS=$(bun -e 'console.log(require(process.argv[1]).sponsor)' "$SWIG_TEST_BUNDLER_CONTEXT")
-export SIGNER_PRIVATE_KEY=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
-export RECIPIENT=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
-bun run examples/read-role.ts
-bun run examples/erc4337.ts
-cd "$evm"
-cargo run --locked -p swig-evm --example read_role
-cargo run --locked -p swig-evm --example erc4337
-cd "$evm/python"
-uv run --locked python examples/read_role.py
-uv run --locked python examples/erc4337.py
+# Prepare dependencies before the scenario test timeouts start, including on a fresh checkout.
+cargo build --manifest-path "$evm/Cargo.toml" --locked -p swig-evm --examples
+uv sync --locked --project "$evm/python"
+bun test integration/examples.test.ts
