@@ -23,9 +23,10 @@ source = json.loads((evm / "abi/source.json").read_text())
 with tempfile.TemporaryDirectory(prefix="swig-sdk-integration-") as temp:
     root = Path(temp)
     archive = root / "contracts.tar"
-    subprocess.run(["git", "-C", str(args.contracts_repo), "archive", f"--output={archive}", source["revision"], "evm/src", "evm/foundry.toml"], check=True)
+    subprocess.run(["git", "-C", str(args.contracts_repo), "archive", f"--output={archive}", source["revision"], "evm/src", "evm/foundry.toml", "evm/package.json", "evm/package-lock.json"], check=True)
     subprocess.run(["tar", "-xf", str(archive), "-C", str(root)], check=True)
     shutil.copyfile(evm / "integration/SdkFixtures.sol", root / "evm/src/SdkFixtures.sol")
+    subprocess.run(["npm", "ci", "--ignore-scripts", "--prefix", str(root / "evm")], check=True)
     subprocess.run([args.forge, "build", "--root", str(root / "evm"), "--skip", "test", "--skip", "script"], check=True)
     for name in ("SwigConfig", "SwigConfigFactory", "SwigVault", "SwigCapsule"):
         artifact = json.loads((root / f"evm/out/{name}.sol/{name}.json").read_text())

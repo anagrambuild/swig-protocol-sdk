@@ -15,8 +15,10 @@ and signature/proof acceptance remain contract responsibilities.
 
 ProgramExec authorization has a small envelope helper for
 `abi.encode(uint32(1), bytes(proof))`. Proof generation is supplied by the caller.
-The wire enum retains session discriminants for identification, but this contract
-revision does not support sessions; typed decoding rejects them explicitly.
+The contract ABI supports bounded sessions. The pure authority/role codecs retain
+session discriminants for identification but still reject session variants;
+use the raw typed contract bindings for session creation and inspection. The
+TypeScript Smart Account adapter accepts an already active EVM session key.
 
 A decoded role contains its ID, decoded authority, and action count. Decoding
 performs no RPC calls. Fetch individual actions through `getAction` and decode

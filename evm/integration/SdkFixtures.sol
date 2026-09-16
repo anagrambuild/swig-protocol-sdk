@@ -2,6 +2,7 @@
 pragma solidity 0.8.35;
 
 import {SwigConfigActions} from "./SwigConfig/SwigConfigActions.sol";
+import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
 
 contract SdkCodecHarness {
     function validateAction(uint8 permission, bytes memory data) external pure {

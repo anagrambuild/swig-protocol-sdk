@@ -86,10 +86,24 @@ async function deployed(hash: Hex): Promise<Address> {
   return receipt.contractAddress;
 }
 
+const entryPoint = await deployed(
+  await wallet.deployContract({
+    abi: [],
+    bytecode: await bytecode("EntryPoint", "EntryPoint"),
+  }),
+);
+const modules = await deployed(
+  await wallet.deployContract({
+    abi: parseAbi(["constructor(address entryPoint)"]),
+    bytecode: await bytecode("SwigConfigModules", "SwigConfigModules"),
+    args: [entryPoint],
+  }),
+);
 const configImpl = await deployed(
   await wallet.deployContract({
     abi: swigConfigAbi,
     bytecode: await bytecode("SwigConfig", "SwigConfig"),
+    args: [modules],
   }),
 );
 const vaultImpl = await deployed(

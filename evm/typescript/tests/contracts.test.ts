@@ -56,7 +56,7 @@ function typeContract(): void {
   void config.write.signV2([0, address, 0n, "0x", "0x"], { feeToken: address });
   // @ts-expect-error role IDs are uint32 numbers, not strings
   void config.read.getRole(["0"]);
-  // @ts-expect-error this method is not part of the pinned ABI
+  // @ts-expect-error session creation requires role, key, duration, and authorization
   void config.read.createSession();
 }
 void typeContract;
