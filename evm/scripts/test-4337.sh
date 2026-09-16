@@ -31,6 +31,7 @@ export SWIG_TEST_BUNDLER_CONTEXT="$SWIG_TEST_WORKDIR/account.json"
 "${compose[@]}" up -d --wait anvil
 export SWIG_TEST_RPC_URL="http://$("${compose[@]}" port anvil 8545)"
 cd "$evm/typescript"
+bun run build
 bun run typecheck:integration
 bun run integration/deploy-4337.ts
 "${compose[@]}" up -d strict compatible
