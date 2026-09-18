@@ -154,6 +154,7 @@ await writeFile(
     beacon,
     sponsor,
     controller,
+    factory: factoryAddress,
   }),
 );
 await writeFile(

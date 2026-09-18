@@ -24,7 +24,8 @@ The EVM packages cover `SwigConfig`, `SwigConfigFactory`, `SwigVault`, and
 errors. See the [TypeScript](evm/typescript/README.md),
 [Rust](evm/rust/README.md), [Python](evm/python/README.md), and
 [protocol data](evm/README.md) documentation. Each language has an `examples/`
-folder for reading roles and submitting sponsored ERC-4337 operations.
+folder organized by wallet scenarios: creation, adding and reading roles, direct
+transfers, and sponsored transfers.
 Packages are currently unpublished.
 
 ## Networks

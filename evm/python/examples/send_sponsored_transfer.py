@@ -1,4 +1,4 @@
-"""Sponsored one-wei transfer on the disposable Compose chain."""
+"""Sponsored native transfer on the disposable Compose chain."""
 
 import os
 import time
@@ -21,7 +21,10 @@ block = web3.eth.get_block("latest")
 account = SwigSmartAccount(address, 1337, role_id, signer.address, 0, block["timestamp"] + 600)
 calldata = account.encode_call(
     config.functions.authorizationNonce(role_id).call(),
-    CallExecution(Web3.to_checksum_address(os.environ["RECIPIENT"]), value=1),
+    CallExecution(
+        Web3.to_checksum_address(os.environ["RECIPIENT"]),
+        value=int(os.environ.get("VALUE_WEI", "1")),
+    ),
 )
 priority_fee = web3.eth.max_priority_fee
 operation: UserOperation = {

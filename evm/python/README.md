@@ -59,9 +59,9 @@ not reset reputation or retry an authorization. See the
 
 ## Examples and checks
 
-The [examples folder](examples/README.md) contains a role reader and a sponsored
-operation submitted through standard Web3.py JSON-RPC. The shared integration
-runner executes both against Anvil and Rundler alongside the other languages.
+The [examples folder](examples/README.md) covers wallet creation, adding and reading roles, and direct/sponsored transfers
+using standard Web3.py calls. The shared integration
+runner executes every scenario against Anvil and Rundler alongside the other languages.
 
 ```bash
 uv sync --locked
