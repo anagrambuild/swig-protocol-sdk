@@ -1,0 +1,1669 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "modules",
+        "type": "address",
+        "internalType": "contract SwigConfigModules"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ROOT_ROLE_ID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "addRole",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addRoleAuthorizationDigest",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "addRoleWithAuthorization",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addSessionRole",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addSessionRoleAuthorizationDigest",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "addSessionRoleWithAuthorization",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "authorityVerifier",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "authorizationNonce",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "capsule",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createSession",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "sessionKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "duration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createSessionAuthorizationDigest",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "sessionKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "duration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "entryPoint",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "executeUserOp",
+    "inputs": [
+      {
+        "name": "userOp",
+        "type": "tuple",
+        "internalType": "struct PackedUserOperation",
+        "components": [
+          {
+            "name": "sender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "initCode",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "callData",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "accountGasLimits",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "preVerificationGas",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "gasFees",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "paymasterAndData",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "userOpHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getAction",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "actionIndex",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "action",
+        "type": "tuple",
+        "internalType": "struct SwigConfig.Action",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getActionCount",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getAuthority",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "authority",
+        "type": "tuple",
+        "internalType": "struct SwigConfig.Authority",
+        "components": [
+          {
+            "name": "authorityType",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.AuthorityType"
+          },
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "keyExtra",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRole",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "role",
+        "type": "tuple",
+        "internalType": "struct SwigConfig.Role",
+        "components": [
+          {
+            "name": "id",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "authority",
+            "type": "tuple",
+            "internalType": "struct SwigConfig.Authority",
+            "components": [
+              {
+                "name": "authorityType",
+                "type": "uint8",
+                "internalType": "enum SwigConfig.AuthorityType"
+              },
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "keyExtra",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              }
+            ]
+          },
+          {
+            "name": "actionCount",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getSecp256k1Address",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getSession",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "session",
+        "type": "tuple",
+        "internalType": "struct SwigConfig.Session",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "maxSessionDuration",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expiration",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasAction",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "actionIndex",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasPermission",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "permission",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.Permission"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasRole",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "vaultAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "capsuleAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "p256VerifierAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "initializeSessionRoot",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "vaultAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "capsuleAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "p256VerifierAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootAuthorityKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootAuthorityKeyExtra",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxSessionDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "rootActions",
+        "type": "tuple[]",
+        "internalType": "struct SwigConfig.Action[]",
+        "components": [
+          {
+            "name": "permission",
+            "type": "uint8",
+            "internalType": "enum SwigConfig.Permission"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "p256Verifier",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "removeRole",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "removeRoleAuthorizationDigest",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "removeRoleWithAuthorization",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "roleCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "roleCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "roleManagement",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "signV2",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "target",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "signV2AuthorizationDigest",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "target",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "dataHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "signV2Module",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "signV2WithCapsule",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "execution",
+        "type": "tuple",
+        "internalType": "struct SwigConfig.CapsuleExecution",
+        "components": [
+          {
+            "name": "target",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "tokenFunding",
+            "type": "tuple[]",
+            "internalType": "struct SwigConfig.TokenFunding[]",
+            "components": [
+              {
+                "name": "token",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "amount",
+                "type": "uint64",
+                "internalType": "uint64"
+              }
+            ]
+          },
+          {
+            "name": "sweepTokens",
+            "type": "address[]",
+            "internalType": "address[]"
+          }
+        ]
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "signV2WithCapsuleAuthorizationDigest",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "execution",
+        "type": "tuple",
+        "internalType": "struct SwigConfig.CapsuleExecution",
+        "components": [
+          {
+            "name": "target",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "tokenFunding",
+            "type": "tuple[]",
+            "internalType": "struct SwigConfig.TokenFunding[]",
+            "components": [
+              {
+                "name": "token",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "amount",
+                "type": "uint64",
+                "internalType": "uint64"
+              }
+            ]
+          },
+          {
+            "name": "sweepTokens",
+            "type": "address[]",
+            "internalType": "address[]"
+          }
+        ]
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "swigId",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "validateUserOp",
+    "inputs": [
+      {
+        "name": "userOp",
+        "type": "tuple",
+        "internalType": "struct PackedUserOperation",
+        "components": [
+          {
+            "name": "sender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "initCode",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "callData",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "accountGasLimits",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "preVerificationGas",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "gasFees",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "paymasterAndData",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "userOpHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "missingAccountFunds",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "vault",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "CapsuleSignV2Executed",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "capsule",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "target",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "executionHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RoleAdded",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "actionCount",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RoleRemoved",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SessionCreated",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "expiration",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SignV2Executed",
+    "inputs": [
+      {
+        "name": "authorityRoleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "target",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "value",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "dataHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SwigConfigured",
+    "inputs": [
+      {
+        "name": "swigId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootRoleId",
+        "type": "uint32",
+        "indexed": true,
+        "internalType": "uint32"
+      },
+      {
+        "name": "rootAuthorityType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum SwigConfig.AuthorityType"
+      },
+      {
+        "name": "rootActionCount",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "ActionDoesNotExist",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "actionIndex",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotRemoveRootRole",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidAction",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidActionCount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidAuthority",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCapsule",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidNativeValue",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidP256Verifier",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSessionDuration",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidVault",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MissingRootManageAuthority",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NestedSwigCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReentrantSignV2",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RoleDoesNotExist",
+    "inputs": [
+      {
+        "name": "roleId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UnauthorizedCapsuleExecution",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnauthorizedRole",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnauthorizedSignV2",
+    "inputs": []
+  }
+]
