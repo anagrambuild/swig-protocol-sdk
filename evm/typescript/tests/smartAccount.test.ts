@@ -13,7 +13,7 @@ import {
   toFunctionSelector,
 } from "viem";
 import {
-  entryPoint08Address,
+  entryPoint09Address,
   getUserOperationTypedData,
   type UserOperation,
 } from "viem/account-abstraction";
@@ -36,7 +36,7 @@ const client = createPublicClient({
       const [{ data }] = params as [{ data: Hex }];
       if (data === toFunctionSelector("entryPoint()"))
         return encodeAbiParameters(parseAbiParameters("address"), [
-          entryPoint08Address,
+          entryPoint09Address,
         ]);
       if (data.startsWith(toFunctionSelector("authorizationNonce(uint32)")))
         return encodeAbiParameters(parseAbiParameters("uint256"), [7n]);
@@ -59,7 +59,7 @@ const options = {
   validUntil: 1000,
 };
 
-function operation(callData: Hex): UserOperation<"0.8"> {
+function operation(callData: Hex): UserOperation<"0.9"> {
   return {
     sender: address,
     nonce: (2n << 64n) + 3n,
@@ -79,7 +79,7 @@ function operation(callData: Hex): UserOperation<"0.8"> {
 test("standard SmartAccount uses a fixed role nonce lane and reads direct nonce when encoding", async () => {
   const account = await toSwigSmartAccount(options);
   expect(account.type).toBe("smart");
-  expect(account.entryPoint.version).toBe("0.8");
+  expect(account.entryPoint.version).toBe("0.9");
   expect(await account.getFactoryArgs()).toEqual({
     factory: undefined,
     factoryData: undefined,
@@ -136,7 +136,7 @@ test("capsule funding and sweep manifests are explicit and uint64 bounded", asyn
   await expect(tooLarge.encodeCalls([{ to: address }])).rejects.toThrow();
 });
 
-test("signing uses upstream v0.8 typed data and rejects a foreign account, chain, role or envelope", async () => {
+test("signing uses upstream v0.9 typed data and rejects a foreign account, chain, role or envelope", async () => {
   const account = await toSwigSmartAccount(options);
   const op = operation(
     await account.encodeCalls([{ to: paymaster, value: 1n }]),
@@ -145,7 +145,7 @@ test("signing uses upstream v0.8 typed data and rejects a foreign account, chain
   const hash = hashTypedData(
     getUserOperationTypedData({
       chainId: anvil.id,
-      entryPointAddress: entryPoint08Address,
+      entryPointAddress: entryPoint09Address,
       userOperation: op,
     }),
   );
@@ -192,4 +192,77 @@ test("adapter requires valid role and time bounds and a deployed account", async
   await expect(
     toSwigSmartAccount({ ...options, client: emptyClient }),
   ).rejects.toThrow("already be deployed");
+});
+
+test("timestamp window reserves the v0.9 block-number bit", async () => {
+  const maximum = await toSwigSmartAccount({
+    ...options,
+    validUntil: 0x7fffffffffff,
+  });
+  const [request] = decodeAbiParameters(
+    requestAbi,
+    sliceHex(await maximum.encodeCalls([{ to: address }]), 4),
+  );
+  expect(request.validUntil).toBe(0x7fffffffffff);
+  await expect(
+    toSwigSmartAccount({ ...options, validUntil: 0x800000000000 }),
+  ).rejects.toThrow("uint47 timestamp");
+  await expect(
+    toSwigSmartAccount({
+      ...options,
+      validAfter: 0x800000000000,
+      validUntil: 0x800000000001,
+    }),
+  ).rejects.toThrow("uint47 timestamp");
+});
+
+test("v0.9 paymaster signature suffix follows upstream hashing", async () => {
+  const account = await toSwigSmartAccount(options);
+  const op = operation(
+    await account.encodeCalls([{ to: paymaster, value: 1n }]),
+  );
+  op.paymasterSignature = "0x";
+  const signature = await account.signUserOperation(op);
+  const withSponsorSignature = {
+    ...op,
+    paymasterSignature: "0x123456" as const,
+  };
+  const hash = hashTypedData(
+    getUserOperationTypedData({
+      chainId: anvil.id,
+      entryPointAddress: entryPoint09Address,
+      userOperation: withSponsorSignature,
+    }),
+  );
+  expect(await recoverAddress({ hash, signature })).toBe(signer.address);
+  const changedSponsor = { ...op, paymasterData: "0x1122" as const };
+  const changedHash = hashTypedData(
+    getUserOperationTypedData({
+      chainId: anvil.id,
+      entryPointAddress: entryPoint09Address,
+      userOperation: changedSponsor,
+    }),
+  );
+  expect(await recoverAddress({ hash: changedHash, signature })).not.toBe(
+    signer.address,
+  );
+});
+
+test("adapter rejects an account still using the v0.8 EntryPoint", async () => {
+  const legacyClient = createPublicClient({
+    chain: anvil,
+    transport: custom({
+      async request({ method }) {
+        if (method === "eth_getCode") return "0x6000";
+        if (method === "eth_call")
+          return encodeAbiParameters(parseAbiParameters("address"), [
+            "0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108",
+          ]);
+        throw new Error(`Unexpected RPC ${method}`);
+      },
+    }),
+  });
+  await expect(
+    toSwigSmartAccount({ ...options, client: legacyClient }),
+  ).rejects.toThrow("canonical EntryPoint v0.9");
 });

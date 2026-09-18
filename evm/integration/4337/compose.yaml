@@ -1,0 +1,41 @@
+# Disposable development keys only. Each invocation uses an isolated Compose project.
+x-bundler: &bundler
+  image: alchemyplatform/rundler:v0.11.0@sha256:ffdc5fca2d5566152af6fe96f88c50a4cf22ce88852bb626c591d3e8ea426178
+  depends_on:
+    anvil:
+      condition: service_healthy
+  ports: ["127.0.0.1::3000"]
+  # Both instances retain validation tracing and all default rules.
+  command: &bundler-command
+    - node
+    - --network=dev
+    - --node_http=http://anvil:8545
+    - --enabled_entry_points=v0.9
+    - --signer.private_keys=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+    - --rpc.api=eth,debug,rundler
+
+services:
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:v1.7.1@sha256:8347b728d5d393dac1c018691b36f506d23b9dcd78341d40ea0fcb11c3a19cdd
+    entrypoint: anvil
+    command: ["--host", "0.0.0.0", "--chain-id", "1337", "--block-time", "1", "--silent"]
+    ports: ["127.0.0.1::8545"]
+    healthcheck:
+      test: ["CMD", "cast", "chain-id", "--rpc-url", "http://127.0.0.1:8545"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  strict:
+    <<: *bundler
+  compatible:
+    <<: *bundler
+    volumes:
+      - ${SWIG_TEST_WORKDIR:?Set the test artifact directory}/mempool.json:/mempool.json:ro
+    command:
+      - node
+      - --network=dev
+      - --node_http=http://anvil:8545
+      - --enabled_entry_points=v0.9
+      - --signer.private_keys=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+      - --rpc.api=eth,debug,rundler
+      - --mempool_config_path=/mempool.json
