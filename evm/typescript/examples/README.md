@@ -59,8 +59,17 @@ transaction receipt.
 
 ## 5. Send a sponsored transfer
 
+Choose either supported smart-account client. Both use the same Swig adapter:
+
+| Client | Pinned version | Runnable example |
+| --- | --- | --- |
+| [Viem Bundler Client](https://viem.sh/account-abstraction/clients/bundler) | 2.56.3 | [send-sponsored-transfer.ts](send-sponsored-transfer.ts) |
+| [permissionless.js Smart Account Client](https://docs.pimlico.io/references/permissionless/reference/clients/smartAccountClient) | 0.4.1, with Viem 2.56.3 | [send-sponsored-transfer-permissionless.ts](send-sponsored-transfer-permissionless.ts) |
+
 ```bash
 bun run examples/send-sponsored-transfer.ts
+# Or, using permissionless.js:
+bun run examples/send-sponsored-transfer-permissionless.ts
 ```
 
 Use a deployed account registered with the compatible bundler and a key for its
@@ -69,6 +78,16 @@ selected secp256k1 role or active session. Set `BUNDLER_URL`, `ACCOUNT_ADDRESS`,
 ERC-4337 v0.9: the authority signs, and the paymaster pays gas.
 Set `PAYMASTER_URL` for the standard Viem paymaster client. On the disposable
 chain (1337), use only `TEST_PAYMASTER_ADDRESS` instead; supplying both is rejected.
+
+Both clients prepare, estimate, sign, submit, and wait for the operation through
+their standard APIs. Each example checks the UserOperation's `success` field;
+transaction inclusion alone does not establish successful wallet execution.
+
+The permissionless example exercises Pimlico's open-source SDK against the local
+Rundler bundler. Hosted Pimlico service acceptance is a separate provider check:
+the shared-beacon account requires the agreed compatible mempool policy. The two
+clients above are the current integration targets; account-specific SDKs need
+their own compatibility verification before being listed as supported.
 
 ## Run every scenario locally
 
@@ -82,5 +101,7 @@ Install Bun, Foundry, Docker, Rust, and uv first. The runner owns a disposable
 Anvil/Rundler deployment and public development keys. It creates a fresh wallet
 per language, adds a limited delegate, reads that role, sends as the delegate,
 and verifies balances and remaining allowance. Sponsored transfers use the
-separately registered fixture account and verify successful inclusion. All 15
-examples run; no real wallet or production paymaster is used.
+separately registered fixture account and verify successful inclusion. All 16
+examples run, including both TypeScript smart-account clients. The permissionless
+check also verifies the vault debit, role nonce consumption, and sponsor charge.
+No real wallet or production paymaster is used.

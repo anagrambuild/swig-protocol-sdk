@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { bytesToHex, createPublicClient, getAddress, http } from "viem";
+import { entryPoint09Abi, entryPoint09Address } from "viem/account-abstraction";
 import { mnemonicToAccount } from "viem/accounts";
 import { decodePermission, decodeRole, getSwigConfig } from "../src/index.js";
 
@@ -147,3 +148,54 @@ test.each(languages)(
   },
   120_000,
 );
+
+test("permissionless sponsored transfer", async () => {
+  const sponsor = process.env.TEST_PAYMASTER_ADDRESS;
+  assert(sponsor);
+  const paymaster = getAddress(sponsor);
+  const config = getSwigConfig(registeredAccount, client);
+  const vault = await config.read.vault();
+  const recipientBefore = await client.getBalance({ address: recipient });
+  const vaultBefore = await client.getBalance({ address: vault });
+  const nonceBefore = await client.readContract({
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
+    functionName: "getNonce",
+    args: [registeredAccount, 0n],
+  });
+  const sponsorBefore = await client.readContract({
+    address: entryPoint09Address,
+    abi: entryPoint09Abi,
+    functionName: "balanceOf",
+    args: [paymaster],
+  });
+  await runExample("typescript", "send_sponsored_transfer_permissionless", {
+    ACCOUNT_ADDRESS: registeredAccount,
+    SIGNER_PRIVATE_KEY: ownerKeyHex,
+    ROLE_ID: "0",
+    RECIPIENT: recipient,
+    VALUE_WEI: "7",
+  });
+  assert.equal(
+    await client.getBalance({ address: recipient }),
+    recipientBefore + 7n,
+  );
+  assert.equal(await client.getBalance({ address: vault }), vaultBefore - 7n);
+  assert.equal(
+    await client.readContract({
+      address: entryPoint09Address,
+      abi: entryPoint09Abi,
+      functionName: "getNonce",
+      args: [registeredAccount, 0n],
+    }),
+    nonceBefore + 1n,
+  );
+  assert(
+    (await client.readContract({
+      address: entryPoint09Address,
+      abi: entryPoint09Abi,
+      functionName: "balanceOf",
+      args: [paymaster],
+    })) < sponsorBefore,
+  );
+}, 120_000);

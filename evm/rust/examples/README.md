@@ -85,5 +85,5 @@ Install Bun, Foundry, Docker, Rust, and uv first. The runner owns a disposable
 Anvil/Rundler deployment and public development keys. It creates a fresh wallet
 per language, adds a limited delegate, reads that role, sends as the delegate,
 and verifies balances and remaining allowance. Sponsored transfers use the
-separately registered fixture account and verify successful inclusion. All 15
+separately registered fixture account and verify successful inclusion. All 16
 examples run; no real wallet or production paymaster is used.
