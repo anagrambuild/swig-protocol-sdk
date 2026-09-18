@@ -6,12 +6,14 @@ rust-version = "1.94.1"
 description = "Thin Rust bindings and codecs for the EVM Swig protocol"
 repository = "https://github.com/anagrambuild/swig-protocol-sdk"
 publish = false
-include = ["src/**", "abi/**", "README.md", "Cargo.toml"]
+include = ["src/**", "abi/**", "examples/**", "README.md", "Cargo.toml"]
 
 [dependencies]
-alloy = { version = "2.4.2", default-features = false, features = ["std", "contract"] }
+alloy = { version = "2.4.2", default-features = false, features = ["std", "contract", "rpc-types"] }
 thiserror = "2"
 
 [dev-dependencies]
+alloy = { version = "2.4.2", features = ["signer-local"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
