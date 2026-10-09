@@ -1,0 +1,40 @@
+{
+  "name": "@swig-wallet/coder",
+  "version": "2.1.0",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anagrambuild/swig-protocol-sdk",
+    "directory": "solana/typescript/packages/coder"
+  },
+  "type": "module",
+  "scripts": {
+    "build-pkg": "tsup-node",
+    "build": "tsup-node",
+    "dev": "tsup-node --watch",
+    "lint": "eslint --config ../../eslint.config.mjs --ext js,ts,tsx src",
+    "lint:fix": "eslint --config ../../eslint.config.mjs --ext js,ts,tsx src --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "export": ".",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@types/bun": "^1.2.5",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "prettier": "^3.3.3",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "tsup": "^8.2.0",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@solana/kit": "^2.1.0"
+  }
+}

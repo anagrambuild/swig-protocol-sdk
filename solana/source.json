@@ -1,0 +1,26 @@
+{
+  "typescript": {
+    "repository": "https://github.com/anagrambuild/swig-ts",
+    "revision": "02bf2cad5c1fb65ddb5dade0143a9b4961f90417",
+    "paths": {
+      "packages/classic": "typescript/packages/classic",
+      "packages/kit": "typescript/packages/kit",
+      "packages/coder": "typescript/packages/coder",
+      "packages/lib": "typescript/packages/lib"
+    }
+  },
+  "rust": {
+    "repository": "https://github.com/anagrambuild/swig-wallet",
+    "revision": "eefb531bc7649313d2d9951efe2030775466ca11",
+    "paths": {
+      "rust-sdk": "rust/sdk",
+      "interface": "rust/interface"
+    },
+    "protocol_dependencies": [
+      "swig",
+      "swig-state",
+      "swig-compact-instructions"
+    ]
+  },
+  "scope": "Source import preserving existing SDK APIs. On-chain Rust dependencies remain pinned to swig-wallet. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
+}
