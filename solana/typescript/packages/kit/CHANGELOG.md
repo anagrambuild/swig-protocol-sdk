@@ -1,0 +1,543 @@
+# @swig-wallet/classic
+
+## 2.1.0
+
+### Minor Changes
+
+- c172c01: Add batch sign transaction function.
+
+### Patch Changes
+
+- Updated dependencies [c172c01]
+  - @swig-wallet/lib@2.1.0
+  - @swig-wallet/coder@2.1.0
+
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies [ab0e184]
+  - @swig-wallet/lib@2.0.0
+  - @swig-wallet/coder@2.0.0
+
+## 1.9.1
+
+### Patch Changes
+
+- Updated dependencies [3fafe5f]
+  - @swig-wallet/lib@1.9.1
+  - @swig-wallet/coder@1.9.1
+
+## 1.9.0
+
+### Patch Changes
+
+- Updated dependencies [446bb16]
+- Updated dependencies [446bb16]
+  - @swig-wallet/coder@1.9.0
+  - @swig-wallet/lib@1.9.0
+
+## 1.8.2
+
+### Patch Changes
+
+- Updated dependencies [5b2643a]
+  - @swig-wallet/lib@1.8.2
+  - @swig-wallet/coder@1.8.2
+
+## 1.8.1
+
+### Patch Changes
+
+- f796830: Update all published packages to Apache-2.0 licensing metadata and align repository
+  license notices with Apache 2.0.
+- Updated dependencies [f796830]
+  - @swig-wallet/coder@1.8.1
+  - @swig-wallet/lib@1.8.1
+
+## 1.8.0
+
+### Patch Changes
+
+- Updated dependencies [135b3aa]
+  - @swig-wallet/lib@1.8.0
+  - @swig-wallet/coder@1.8.0
+
+## 1.7.1
+
+### Patch Changes
+
+- Updated dependencies [c522b47]
+  - @swig-wallet/lib@1.7.1
+  - @swig-wallet/coder@1.7.1
+
+## 1.7.0
+
+### Patch Changes
+
+- Updated dependencies [77cb698]
+  - @swig-wallet/lib@1.7.0
+  - @swig-wallet/coder@1.7.0
+
+## 1.6.0
+
+### Minor Changes
+
+- d06ec30: Adds support for new CloseSwig set of instructions
+
+### Patch Changes
+
+- 11e1a52: Add SwigInstructionOptions type for native KitInstruction support in pre/postInstructions
+- Updated dependencies [11e1a52]
+- Updated dependencies [11e1a52]
+- Updated dependencies [d06ec30]
+  - @swig-wallet/coder@1.6.0
+  - @swig-wallet/lib@1.6.0
+
+## 1.5.0
+
+### Minor Changes
+
+- 814aebd: - getUpdateAuthorityV1Instruction
+
+### Patch Changes
+
+- Updated dependencies [814aebd]
+- Updated dependencies [814aebd]
+- Updated dependencies [3636769]
+  - @swig-wallet/lib@1.5.0
+  - @swig-wallet/coder@1.5.0
+
+## 1.4.2
+
+### Patch Changes
+
+- Updated dependencies [d320aa4]
+  - @swig-wallet/lib@1.4.2
+  - @swig-wallet/coder@1.4.2
+
+## 1.4.1
+
+### Patch Changes
+
+- @swig-wallet/coder@1.4.1
+- @swig-wallet/lib@1.4.1
+
+## 1.4.0
+
+### Minor Changes
+
+- 56e46d5: - `getWithdrawFromSubAccountCheckedInstructions`
+- 4dc32d9: - Migrate SubAccount from account to action
+  - SignV2 support
+  - TransferAssetV1 support
+  - Swig Account V2, separating wallet & config account
+  - ToggleSubAccountV1 includes actingRoleId
+
+### Patch Changes
+
+- Updated dependencies [ad962ee]
+- Updated dependencies [56e46d5]
+- Updated dependencies [4dc32d9]
+- Updated dependencies [4dc32d9]
+- Updated dependencies [0fec553]
+  - @swig-wallet/lib@1.4.0
+  - @swig-wallet/coder@1.4.0
+
+## 1.3.0
+
+### Minor Changes
+
+- 5889be0: - `AddMultipleAuthoiritiesInstructionBuilder` class for building classic instruction for multi-authority add.
+  - `getCreateSwigInstructionBuilder`, `getAddMultipleAuthoritiesInstructionBuilder` helpers for building multi-authoirity add instructions for new and exsisting swig respectively.
+
+### Patch Changes
+
+- Updated dependencies [6f3a25c]
+- Updated dependencies [5889be0]
+  - @swig-wallet/lib@1.3.0
+  - @swig-wallet/coder@1.3.0
+
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [405ff61]
+  - @swig-wallet/lib@1.2.1
+  - @swig-wallet/coder@1.2.1
+
+## 1.2.0
+
+### Patch Changes
+
+- Updated dependencies [7a87665]
+- Updated dependencies [28298bf]
+  - @swig-wallet/coder@1.2.0
+  - @swig-wallet/lib@1.2.0
+
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [a6671df]
+- Updated dependencies [6c4afdd]
+  - @swig-wallet/coder@1.1.1
+  - @swig-wallet/lib@1.1.1
+
+## 1.1.0
+
+### Patch Changes
+
+- d6411d4: Remove `Buffer` from @/lib and @/kit packages to eliminate need for Node polyfills
+- Updated dependencies [d6411d4]
+- Updated dependencies [3c1437e]
+- Updated dependencies [cb54f9d]
+  - @swig-wallet/lib@1.1.0
+  - @swig-wallet/coder@1.1.0
+
+## 1.0.0
+
+### Major Changes
+
+- 286f8c4: v1.0 Prod Release.
+
+  ### Key Changes
+  1. **Modular Architecture**: Core logic moved to `@swig-wallet/lib`
+  2. **Instruction-Based API**: Functions return `TransactionInstruction[]` instead of single instructions
+  3. **Simplified Package Structure**: `@swig-wallet/classic` now acts as a thin wrapper
+  4. **Updated Dependencies**: Moved from `@solana/spl-token` to `@solana-program/token`
+
+  ## Package Changes
+
+  ### Before (Beta)
+
+  ```typescript
+  import {
+    Actions,
+    createSwig,
+    Ed25519Authority,
+    addAuthorityInstruction,
+    signInstruction,
+  } from '@swig-wallet/classic';
+  ```
+
+  ### After (v1.0)
+
+  #### For Web3.js 1.x applications:
+
+  ```typescript
+  import {
+    Actions,
+    getCreateSwigInstruction,
+    createEd25519AuthorityInfo,
+    getAddAuthorityInstructions,
+    getSignInstructions,
+  } from '@swig-wallet/classic';
+  ```
+
+  #### For Web3.js 2.0 applications:
+
+  ```typescript
+  import {
+    Actions,
+    getCreateSwigInstruction,
+    createEd25519AuthorityInfo,
+    getAddAuthorityInstructions,
+    getSignInstructions,
+  } from '@swig-wallet/kit';
+  ```
+
+  ### After (v1.0)
+
+  ```typescript
+  import {
+    Actions,
+    getCreateSwigInstruction,
+    createEd25519AuthorityInfo,
+    getAddAuthorityInstructions,
+    getSignInstructions,
+  } from '@swig-wallet/classic';
+  ```
+
+  ## Function Migrations
+
+  ### Creating a Swig
+
+  #### Before (Beta)
+
+  ```typescript
+  const rootAuthority = Ed25519Authority.fromPublicKey(user.publicKey);
+  const rootActions = Actions.set().manageAuthority().get();
+  const tx = await createSwig(
+    connection,
+    id,
+    rootAuthority,
+    rootActions,
+    user.publicKey,
+    [user],
+  );
+  ```
+
+  #### After (v1.0)
+
+  ```typescript
+  const rootAuthorityInfo = createEd25519AuthorityInfo(user.publicKey);
+  const rootActions = Actions.set().manageAuthority().get();
+
+  const createSwigIx = await getCreateSwigInstruction({
+    payer: user.publicKey,
+    id,
+    actions: rootActions,
+    authorityInfo: rootAuthorityInfo,
+  });
+
+  const transaction = new Transaction().add(createSwigIx);
+  const signature = await sendAndConfirmTransaction(connection, transaction, [
+    user,
+  ]);
+  ```
+
+  ### Adding Authorities
+
+  #### Before (Beta)
+
+  ```typescript
+  const addAuthorityIx = await addAuthorityInstruction(
+    rootRole,
+    rootUser.publicKey,
+    createEd25519AuthorityInfo(newAuthority.publicKey),
+    actions,
+  );
+
+  const transaction = new Transaction().add(addAuthorityIx);
+  ```
+
+  #### After (v1.0)
+
+  ```typescript
+  const addAuthorityInstructions = await getAddAuthorityInstructions(
+    swig,
+    rootRole.id,
+    createEd25519AuthorityInfo(newAuthority.publicKey),
+    actions,
+  );
+
+  const transaction = new Transaction().add(...addAuthorityInstructions);
+  ```
+
+  ### Signing Instructions
+
+  #### Before (Beta)
+
+  ```typescript
+  const signedTransfer = await signInstruction(
+    tokenRole,
+    tokenAuthority.publicKey,
+    [transferIx],
+  );
+
+  const transaction = new Transaction().add(signedTransfer);
+  ```
+
+  #### After (v1.0)
+
+  ```typescript
+  const signedTransferInstructions = await getSignInstructions(
+    swig,
+    tokenRole.id,
+    [transferIx],
+  );
+
+  const transaction = new Transaction().add(...signedTransferInstructions);
+  ```
+
+  ### PDA Derivation
+
+  #### Before (Beta)
+
+  ```typescript
+  const [swigAddress] = findSwigPda(id);
+  ```
+
+  #### After (v1.0)
+
+  ```typescript
+  const swigAddress = findSwigPda(id);
+  ```
+
+  ## Authority Creation Changes
+
+  ### Before (Beta)
+
+  ```typescript
+  const rootAuthority = Ed25519Authority.fromPublicKey(user.publicKey);
+  ```
+
+  ### After (v1.0)
+
+  ```typescript
+  const rootAuthorityInfo = createEd25519AuthorityInfo(user.publicKey);
+  ```
+
+  ## Import Changes
+
+  ### Core Classes
+  - `Actions` class is now imported from `@swig-wallet/lib` (re-exported by `@swig-wallet/classic`)
+  - `Swig` class is now imported from `@swig-wallet/lib` (re-exported by `@swig-wallet/classic`)
+  - Authority classes have been replaced with info creation functions
+
+  ### Function Naming
+  - `createSwig()` → `getCreateSwigInstruction()`
+  - `addAuthorityInstruction()` → `getAddAuthorityInstructions()`
+  - `signInstruction()` → `getSignInstructions()`
+  - `removeAuthorityInstruction()` → `getRemoveAuthorityInstructions()`
+
+  ## Dependency Updates
+
+  ### For Web3.js 1.x applications:
+
+  ```json
+  {
+    "dependencies": {
+      "@swig-wallet/classic": "^1.0.0",
+      "@solana-program/token": "^0.5.1",
+      "@solana/web3.js": "^1.98.0"
+    }
+  }
+  ```
+
+  ### For Web3.js 2.0 applications:
+
+  ```json
+  {
+    "dependencies": {
+      "@swig-wallet/kit": "^1.0.0",
+      "@solana-program/token": "^0.5.1",
+      "@solana/kit": "^2.1.0"
+    }
+  }
+  ```
+
+  Remove old dependencies:
+
+  ```bash
+  npm uninstall @solana/spl-token
+  ```
+
+  Remove old dependencies:
+
+  ```bash
+  npm uninstall @solana/spl-token
+  ```
+
+  ## Migration Checklist
+  - [ ] Update package dependencies
+  - [ ] Replace single instruction functions with instruction array functions
+  - [ ] Update authority creation from classes to info functions
+  - [ ] Update PDA derivation calls
+  - [ ] Replace `Ed25519Authority.fromPublicKey()` with `createEd25519AuthorityInfo()`
+  - [ ] Update transaction building to spread instruction arrays
+  - [ ] Test all functionality with the new API
+  - [ ] Update error handling for new function signatures
+
+  ## Common Migration Issues
+
+  ### Issue: Functions returning arrays instead of single instructions
+
+  **Solution**: Use the spread operator when adding to transactions:
+
+  ```typescript
+  // Before
+  transaction.add(instruction);
+
+  // After
+  transaction.add(...instructions);
+  ```
+
+  ### Issue: Authority class methods no longer available
+
+  **Solution**: Use the Swig instance methods instead:
+
+  ```typescript
+  // Before
+  const role = authority.findRole();
+
+  // After
+  const swig = await fetchSwig(connection, swigAddress);
+  const role = swig.findRolesByEd25519SignerPk(publicKey)[0];
+  ```
+
+  ### Issue: Import errors for removed classes
+
+  **Solution**: Replace with new function-based API:
+
+  ```typescript
+  // Before
+  import { Ed25519Authority } from '@swig-wallet/classic';
+  const auth = Ed25519Authority.fromPublicKey(pk);
+
+  // After
+  import { createEd25519AuthorityInfo } from '@swig-wallet/classic';
+  const authInfo = createEd25519AuthorityInfo(pk);
+  ```
+
+  ## Getting Help
+
+  If you encounter issues during migration:
+  1. Check the [API documentation](https://anagrambuild.github.io/swig-ts/modules.html)
+  2. Review the updated [tutorials](./index)
+  3. Examine the [example code](https://github.com/anagrambuild/swig-ts/tree/main/examples/classic/transfer/tutorial)
+  4. Open an issue on the [GitHub repository](https://github.com/anagrambuild/swig-ts/issues)
+
+  The v1.0 release is designed to be more consistent and composable, making it easier to build complex Swig applications once you've completed the migration.
+
+- 4fdb43b: update program id and discriminator
+
+### Minor Changes
+
+- 322dea1: Remove unneeded argument of authority payload length for crateSessionV1Args
+
+### Patch Changes
+
+- 519d418: Added: Roles, Swig and Rpc to Kit
+- Updated dependencies [322dea1]
+- Updated dependencies [286f8c4]
+- Updated dependencies [4fdb43b]
+  - @swig-wallet/coder@1.0.0
+  - @swig-wallet/lib@1.0.0
+
+## 0.2.0-beta.6
+
+### Patch Changes
+
+- 89a9c9c: fix internal 'coder' dependency version
+  - @swig-wallet/coder@0.2.0-beta.6
+
+## 0.2.0-beta.5
+
+### Patch Changes
+
+- 0adc80b: SubAccounts & Secp256K1 Hardening
+- Updated dependencies [147493f]
+- Updated dependencies [0adc80b]
+  - @swig-wallet/coder@0.2.0-beta.5
+
+## 0.2.0-beta.4
+
+### Patch Changes
+
+- 43fcc49: Fix internal depeendency install: @swig-wallet/coder
+
+## 0.2.0-beta.3
+
+### Patch Changes
+
+- c1571a8: Update Secp sign, AuthorityInfo
+
+## 0.2.0-beta.2
+
+### Patch Changes
+
+- aa696bd: fix @swig-wallet/coder imports
+- Updated dependencies [aa696bd]
+  - @swig-wallet/coder@0.2.0-beta.2

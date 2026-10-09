@@ -1,0 +1,801 @@
+import { keccak_256 } from '@noble/hashes/sha3';
+import { getArrayEncoder, getU8Encoder } from '@solana/kit';
+import {
+  getAccountsPayloadEncoder,
+  getAddAuthorityV1AuthorityPayloadEncoder,
+  getCloseSwigV1InstructionDataCodec,
+  getCloseTokenAccountV1InstructionDataCodec,
+  getCompactInstructionEncoder,
+  getCreateSessionV1AuthorityPayloadCodec,
+  getRemoveAuthorityV1AuthorityPayloadEncoder,
+  getSecp256r1SignatureInstructionDataEncoder,
+  getSubAccountCreateV1InstructionDataCodec,
+  getSubAccountToggleV1InstructionDataCodec,
+  getSubAccountWithdrawV1InstructionDataCodec,
+  getTransferAssetsV1InstructionDataCodec,
+  getUpdateAuthorityV1AuthorityPayloadEncoder,
+} from '@swig-wallet/coder';
+import {
+  SwigInstructionV1,
+  SwigInstructionV2,
+  compactInstructions,
+  getAddAuthorityV1BaseAccountMetasWithSystemProgram,
+  getCloseSwigV1BaseAccountMetas,
+  getCloseTokenAccountV1BaseAccountMetas,
+  getCreateSessionV1BaseAccountMetasWithSystemProgram,
+  getRemoveAuthorityV1BaseAccountMetasWithSystemProgram,
+  getSignV1BaseAccountMetasWithSystemProgram,
+  getSignV2BaseAccountMetasWithSystemProgram,
+  getSubAccountCreateV1BaseAccountMetasWithSystemProgram,
+  getSubAccountSignV1BaseAccountMetasWithSystemProgram,
+  getSubAccountToggleV1BaseAccountMetasWithSystemProgram,
+  getSubAccountWithdrawV1AccountMetasWithAuthorityContext,
+  getSubAccountWithdrawV1SolAccountMetas,
+  getSubAccountWithdrawV1TokenAccountMetas,
+  getTransferAssetsV1BaseAccountMetasWithSystemProgram,
+  getUpdateAuthorityV1BaseAccountMetasWithSystemProgram,
+} from '../../instructions';
+import { SolAccountMeta, SolInstruction, SolPublicKey } from '../../solana';
+import type { AuthorityInstruction, SigningFn } from './interface';
+
+// For secp256r1, authority payload is 17 bytes: 8 (slot) + 4 (counter) + 1 (instruction index) + 4 (padding)
+const SECP256R1_AUTHORITY_PAYLOAD_SIZE = 17;
+
+/**
+ * Secp256r1 Authority Instructions
+ */
+export const Secp256r1Instruction: AuthorityInstruction = {
+  async addAuthorityV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const addAuthorityIxAccountMetas =
+      getAddAuthorityV1BaseAccountMetasWithSystemProgram(accounts, [
+        instructionsSysvar,
+      ]);
+
+    const authorityPayloadCodec = getAddAuthorityV1AuthorityPayloadEncoder();
+
+    const message = authorityPayloadCodec.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      addAuthorityIxAccountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.addAuthority(
+      addAuthorityIxAccountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async removeAuthorityV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const removeIxAccountMetas =
+      getRemoveAuthorityV1BaseAccountMetasWithSystemProgram(accounts, [
+        instructionsSysvar,
+      ]);
+
+    const authorityPayloadCodec = getRemoveAuthorityV1AuthorityPayloadEncoder(
+      SECP256R1_AUTHORITY_PAYLOAD_SIZE,
+    );
+
+    const message = authorityPayloadCodec.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      removeIxAccountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.removeAuthority(
+      removeIxAccountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async updateAuthorityV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const metas = getUpdateAuthorityV1BaseAccountMetasWithSystemProgram(
+      accounts,
+      [instructionsSysvar],
+    );
+
+    const authorityPayloadCodec = getUpdateAuthorityV1AuthorityPayloadEncoder();
+
+    const message = authorityPayloadCodec.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      metas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.updateAuthority(
+      metas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async signV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    // Add instructions sysvar account for secp256r1
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const signInstructionsAccount = getSignV1BaseAccountMetasWithSystemProgram(
+      accounts,
+      [instructionsSysvar],
+    );
+
+    const { accounts: metas, compactIxs } = compactInstructions(
+      accounts.swig,
+      signInstructionsAccount,
+      data.innerInstructions,
+    );
+
+    const encodedCompactInstructions = getArrayEncoder(
+      getCompactInstructionEncoder(),
+      {
+        size: getU8Encoder(),
+      },
+    ).encode(compactIxs);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(encodedCompactInstructions),
+      metas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.sign(
+      metas,
+      {
+        roleId: data.roleId,
+        authorityPayload,
+        compactInstructions: compactIxs,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async signV2Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    // Add instructions sysvar account for secp256r1
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const signInstructionsAccount = getSignV2BaseAccountMetasWithSystemProgram(
+      accounts,
+      [instructionsSysvar],
+    );
+
+    const { accounts: metas, compactIxs } = compactInstructions(
+      accounts.swig,
+      signInstructionsAccount,
+      data.innerInstructions,
+      [accounts.swigSystemAddress],
+    );
+
+    // The Solana runtime always marks the fee payer as is_signer=true on all
+    // AccountInfos. If the payer appears in metas (e.g. as a transfer destination),
+    // it must be marked as signer here so the client-side hash matches the on-chain
+    // hash. See: https://github.com/anagrambuild/swig-ts/issues/107
+    if (options.payer) {
+      const payerKey = new SolPublicKey(options.payer).toBase58();
+      const payerMeta = metas.find((m) => m.publicKey.toBase58() === payerKey);
+      if (payerMeta) {
+        payerMeta.setSigner(true);
+      }
+    }
+
+    const encodedCompactInstructions = getArrayEncoder(
+      getCompactInstructionEncoder(),
+      {
+        size: getU8Encoder(),
+      },
+    ).encode(compactIxs);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(encodedCompactInstructions),
+      metas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV2.sign(
+      metas,
+      {
+        roleId: data.roleId,
+        authorityPayload,
+        compactInstructions: compactIxs,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async createSessionV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const createSessionIxAccountMetas =
+      getCreateSessionV1BaseAccountMetasWithSystemProgram(accounts, [
+        instructionsSysvar,
+      ]);
+
+    const authorityPayloadCodec =
+      getCreateSessionV1AuthorityPayloadCodec().codec;
+
+    const message = authorityPayloadCodec.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      createSessionIxAccountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.createSession(
+      createSessionIxAccountMetas,
+      { ...data, authorityPayload },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async subAccountCreateV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const accountMetas = getSubAccountCreateV1BaseAccountMetasWithSystemProgram(
+      accounts,
+      [instructionsSysvar],
+    );
+
+    const { payloadEncoder } = getSubAccountCreateV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.subAccountCreate(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async subAccountSignV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const signInstructionsAccount =
+      getSubAccountSignV1BaseAccountMetasWithSystemProgram(accounts, [
+        instructionsSysvar,
+      ]);
+
+    const { accounts: metas, compactIxs } = compactInstructions(
+      accounts.swig,
+      signInstructionsAccount,
+      data.innerInstructions,
+      [accounts.subAccount],
+    );
+
+    const encodedCompactInstructions = getArrayEncoder(
+      getCompactInstructionEncoder(),
+      {
+        size: getU8Encoder(),
+      },
+    ).encode(compactIxs);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(encodedCompactInstructions),
+      metas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.subAccountSign(
+      metas,
+      {
+        roleId: data.roleId,
+        compactInstructions: compactIxs,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async subAccountToggleV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const accountMetas = getSubAccountToggleV1BaseAccountMetasWithSystemProgram(
+      accounts,
+      [instructionsSysvar],
+    );
+
+    const { payloadEncoder } = getSubAccountToggleV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.subAccountToggle(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async subAccountWithdrawV1SolInstruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const baseMetas = getSubAccountWithdrawV1SolAccountMetas(accounts);
+    const [accountMetas] =
+      getSubAccountWithdrawV1AccountMetasWithAuthorityContext(
+        baseMetas,
+        instructionsSysvar,
+      );
+
+    const { payloadEncoder } = getSubAccountWithdrawV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.subAccountWithdraw(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async subAccountWithdrawV1TokenInstruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const baseMetas = getSubAccountWithdrawV1TokenAccountMetas(accounts);
+    const [accountMetas] =
+      getSubAccountWithdrawV1AccountMetasWithAuthorityContext(
+        baseMetas,
+        instructionsSysvar,
+      );
+
+    const { payloadEncoder } = getSubAccountWithdrawV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.subAccountWithdraw(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx] },
+    );
+  },
+
+  async transferAssetsV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const accountMetas = getTransferAssetsV1BaseAccountMetasWithSystemProgram(
+      accounts,
+      [instructionsSysvar],
+    );
+
+    const { payloadEncoder } = getTransferAssetsV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.transferAssets(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async closeSwigV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const baseMetas = getCloseSwigV1BaseAccountMetas(accounts);
+    const accountMetas = [...baseMetas, instructionsSysvar] as [
+      ...typeof baseMetas,
+      ...SolAccountMeta[],
+    ];
+
+    const { payloadEncoder } = getCloseSwigV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode(data);
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.closeSwig(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+
+  async closeTokenAccountV1Instruction(accounts, data, options) {
+    if (!options?.signingFn || options?.currentSlot === undefined)
+      throw new Error(
+        'instruction data options not provided for Secp256r1 based authority',
+      );
+
+    const instructionsSysvar = SolAccountMeta.from({
+      pubkey: new SolPublicKey('Sysvar1nstructions1111111111111111111111111'),
+      isSigner: false,
+      isWritable: false,
+    });
+
+    const baseMetas = getCloseTokenAccountV1BaseAccountMetas(accounts);
+
+    // Append writable token account metas after the base accounts
+    const tokenAccountMetas = (data.tokenAccounts ?? []).map((ta: any) =>
+      SolAccountMeta.from({
+        pubkey: new SolPublicKey(ta),
+        isSigner: false,
+        isWritable: true,
+      }),
+    );
+
+    const accountMetas = [
+      ...baseMetas,
+      instructionsSysvar,
+      ...tokenAccountMetas,
+    ] as [...typeof baseMetas, ...SolAccountMeta[]];
+
+    const { payloadEncoder } = getCloseTokenAccountV1InstructionDataCodec();
+
+    const message = payloadEncoder.encode({
+      ...data,
+      tokenAccountOffset: baseMetas.length + 1,
+    });
+
+    const { authorityPayload, sigVerifyIx } = await prepareSecp256r1Payload(
+      Uint8Array.from(message),
+      accountMetas,
+      new Uint8Array(data.authorityData),
+      {
+        signingFn: options.signingFn,
+        odometer: options.odometer,
+        currentSlot: options.currentSlot,
+      },
+    );
+
+    return SwigInstructionV1.closeTokenAccount(
+      accountMetas,
+      {
+        ...data,
+        tokenAccountOffset: baseMetas.length + 1,
+        authorityPayload,
+      },
+      { preInstructions: [sigVerifyIx], postInstructions: [] },
+    );
+  },
+};
+
+export async function prepareSecp256r1Payload(
+  dataPayload: Uint8Array,
+  accountMetas: SolAccountMeta[],
+  publicKey: Uint8Array,
+  options: {
+    signingFn: SigningFn;
+    currentSlot: bigint;
+    odometer?: number;
+  },
+): Promise<{
+  authorityPayload: Uint8Array;
+  sigVerifyIx: SolInstruction;
+}> {
+  const u64Len = 8;
+
+  const slot = new Uint8Array(u64Len);
+  const slotView = new DataView(slot.buffer);
+  slotView.setBigUint64(0, options.currentSlot, true);
+
+  const odometer = new Uint8Array(4);
+  const odometerView = new DataView(odometer.buffer);
+  odometerView.setUint32(0, options.odometer ?? 1, true);
+
+  const accountsPayloadBytes = getAccountsPayloadEncoder(
+    accountMetas.length,
+  ).encode(
+    accountMetas.map((metas) => ({
+      ...metas.toWeb3AccountMeta(),
+      pubkey: metas.publicKey.toBytes(),
+    })),
+  );
+
+  const message = new Uint8Array(
+    dataPayload.length + accountsPayloadBytes.length + u64Len + odometer.length,
+  );
+  message.set(dataPayload);
+  message.set(accountsPayloadBytes, dataPayload.length);
+  message.set(slot, dataPayload.length + accountsPayloadBytes.length);
+  message.set(
+    odometer,
+    dataPayload.length + accountsPayloadBytes.length + u64Len,
+  );
+
+  // For secp256r1, use keccak directly (not sha256+keccak like secp256k1)
+  const messageHash = keccak_256(message);
+  // Note: For secp256r1, the signature is handled by the secp256r1 precompile instruction
+  // The signingFn is called to trigger the signature creation, but we don't use the result here
+
+  // const counter = options.odometer ?? 1;
+  const {
+    signature,
+    prefix,
+    message: signedMsg,
+  } = await options.signingFn(messageHash);
+
+  const signedMessage = signedMsg ?? messageHash;
+
+  const prefixPayload = prefix ?? new Uint8Array(0);
+
+  // Find the instructions sysvar account index
+  const instructionSysvarIndex = accountMetas.findIndex(
+    (meta) =>
+      meta.publicKey.toBase58() ===
+      'Sysvar1nstructions1111111111111111111111111',
+  );
+
+  if (instructionSysvarIndex === -1) {
+    throw new Error('Instructions sysvar account not found in account metas');
+  }
+
+  // For secp256r1, the authority payload structure is:
+  // - 8 bytes: slot (little endian)
+  // - 4 bytes: counter/odometer (little endian)
+  // - 1 byte: instruction sysvar account index
+  // - 4 bytes: padding to meet minimum 17 byte requirement
+  const authorityPayload = new Uint8Array(
+    SECP256R1_AUTHORITY_PAYLOAD_SIZE + prefixPayload.length,
+  );
+  authorityPayload.set(slot, 0);
+  authorityPayload.set(odometer, 8);
+  authorityPayload[12] = instructionSysvarIndex;
+  // Remaining 4 bytes are padding (already zeroed)
+  authorityPayload.set(prefixPayload, SECP256R1_AUTHORITY_PAYLOAD_SIZE);
+
+  const instData = getSecp256r1SignatureInstructionDataEncoder().encode({
+    message: signedMessage,
+    publicKey,
+    signature,
+  });
+
+  const sigVerifyIx = new SolInstruction({
+    program: new SolPublicKey('Secp256r1SigVerify1111111111111111111111111'),
+    accounts: [],
+    data: instData,
+  });
+
+  return { authorityPayload, sigVerifyIx };
+}

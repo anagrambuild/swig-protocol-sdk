@@ -1,0 +1,44 @@
+{
+  "name": "swig-solana-protocol-sdk",
+  "version": "0.2.0-beta.2",
+  "license": "Apache-2.0",
+  "sideEffects": true,
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nx run-many -t build",
+    "build:packages": "nx run-many -t build",
+    "typecheck": "nx run-many -t typecheck",
+    "lint": "nx run-many -t lint",
+    "format": "prettier --check packages/",
+    "test:unit": "bun test packages/lib/tests/actions",
+    "test": "nx run-many -t test"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.27.0",
+    "@types/node": "^22.13.10",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "globals": "^16.2.0",
+    "nx": "21.1.2",
+    "prettier": "^3.3.3",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.4.0",
+    "typedoc": "^0.28.4",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@ethereumjs/wallet": "^2.0.4",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.0",
+    "ethers": "^6.13.5",
+    "ws": "^8.18.1"
+  }
+}
