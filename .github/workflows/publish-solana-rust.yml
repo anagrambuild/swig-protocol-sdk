@@ -1,0 +1,100 @@
+name: Publish Solana Rust
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/publish-solana-rust.yml
+      - solana/rust/**
+      - solana/scripts/**
+      - solana/source.json
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'release' && 'publish' || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name == 'pull_request' || startsWith(github.event.release.tag_name, 'solana-rust-v')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solana/rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.96.1
+        with:
+          components: rustfmt, clippy
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --locked
+      - name: Fetch the pinned program for compatibility tests
+        run: |
+          revision=$(python3 -c 'import json; print(json.load(open("../source.json"))["rust"]["revision"])')
+          git init "$RUNNER_TEMP/swig-wallet"
+          git -C "$RUNNER_TEMP/swig-wallet" remote add origin https://github.com/anagrambuild/swig-wallet.git
+          git -C "$RUNNER_TEMP/swig-wallet" fetch --depth=1 origin "$revision"
+          git -C "$RUNNER_TEMP/swig-wallet" checkout --detach FETCH_HEAD
+      - name: Install Solana CLI and SBF compiler
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.2.2/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+          cargo install cargo-build-sbf --version 4.0.0 --locked --force
+      - name: Build pinned program fixtures
+        run: python3 ../scripts/build-test-programs.py --program-repo "$RUNNER_TEMP/swig-wallet"
+      - name: Test ABI parity and SDK behavior
+        run: cargo test --workspace --locked --features rust_sdk_test
+      - name: Verify published archives and external consumer
+        run: python3 ../scripts/check-rust-packages.py --program-repo "$RUNNER_TEMP/swig-wallet"
+
+  publish:
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'solana-rust-v')
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: solana/rust
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.96.1
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+      - name: Require a versioned release from main
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          python3 - <<'PY'
+          import os, tomllib
+          version = tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"]
+          if os.environ["RELEASE_TAG"] != f"solana-rust-v{version}":
+              raise SystemExit("Release tag must match the workspace crate version")
+          PY
+      # swig-interface needs its initial owner-authenticated publish before
+      # configuring this workflow as its trusted publisher. swig-sdk already exists.
+      - uses: rust-lang/crates-io-auth-action@v1
+        id: auth
+      - name: Publish interface, then SDK
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"])')
+          for crate in swig-interface swig-sdk; do
+            if cargo info "$crate@$version" --registry crates-io >/dev/null 2>&1; then
+              echo "$crate@$version is already published"
+            else
+              cargo publish --locked -p "$crate"
+            fi
+          done

@@ -8717,6 +8717,7 @@ dependencies = [
  "bytemuck",
  "hex",
  "openssl",
+ "pinocchio 0.9.0",
  "serde",
  "serde_json",
  "solana-sdk",

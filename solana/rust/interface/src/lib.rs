@@ -7,30 +7,8 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
-pub use swig;
-use swig::actions::{
-    add_authority_v1::AddAuthorityV1Args,
-    add_authorization_lock_v1::AddAuthorizationLockV1Args,
-    close_sub_account_v1::CloseSubAccountV1Args,
-    close_sub_account_v2::CloseSubAccountV2Args,
-    close_swig_v1::CloseSwigV1Args,
-    close_token_account_v1::CloseTokenAccountV1Args,
-    create_session_v1::CreateSessionV1Args,
-    create_sub_account_v1::CreateSubAccountV1Args,
-    create_sub_account_v2::CreateSubAccountV2Args,
-    create_v1::CreateV1Args,
-    remove_authority_v1::RemoveAuthorityV1Args,
-    remove_authorization_lock_v1::RemoveAuthorizationLockV1Args,
-    set_rent_claimer_v1::SetRentClaimerV1Args,
-    sub_account_sign_v1::SubAccountSignV1Args,
-    sub_account_sign_v2::SubAccountSignV2Args,
-    toggle_sub_account_v1::ToggleSubAccountV1Args,
-    toggle_sub_account_v2::ToggleSubAccountV2Args,
-    transfer_assets_v1::TransferAssetsV1Args,
-    update_authority_v1::{AuthorityUpdateOperation, UpdateAuthorityV1Args},
-    withdraw_from_sub_account_v1::WithdrawFromSubAccountV1Args,
-    withdraw_from_sub_account_v2::WithdrawFromSubAccountV2Args,
-};
+pub mod instruction_data;
+use instruction_data::*;
 pub use swig_compact_instructions::*;
 use swig_state::{
     action::{
@@ -210,10 +188,11 @@ impl ClientAction {
 }
 
 pub fn program_id() -> Pubkey {
-    swig::ID.into()
+    PROGRAM_ID.into()
 }
 
-pub const PROGRAM_ID: [u8; 32] = swig::ID;
+pub const PROGRAM_ID: [u8; 32] =
+    solana_sdk::pubkey!("swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB").to_bytes();
 
 /// Derives a legacy config address using `["swig", id]`. A reserved commitment
 /// is also stored as an ID, but belongs to a different namespace: use the
@@ -286,7 +265,7 @@ impl CreateInstruction {
         }
         write.append(&mut action_bytes);
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts: vec![
                 AccountMeta::new(swig_account, false),
                 AccountMeta::new(payer, true),
@@ -336,7 +315,7 @@ impl AddAuthorityInstruction {
         write.extend_from_slice(&action_bytes);
         write.extend_from_slice(&[3]);
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: write,
         })
@@ -391,7 +370,7 @@ impl AddAuthorityInstruction {
         )?;
 
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [
                 arg_bytes,
@@ -457,7 +436,7 @@ impl AddAuthorityInstruction {
         )?;
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [
                 args_bytes,
@@ -515,7 +494,7 @@ impl AddAuthorityInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, None);
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [
                 arg_bytes,
@@ -574,7 +553,7 @@ impl AddAuthorityInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, Some(target_ix_index));
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [
                 arg_bytes,
@@ -633,12 +612,12 @@ impl SignV2Instruction {
         }
         let ix_bytes = ixs.into_bytes()?;
         let instruction_payload_len = u16::try_from(ix_bytes.len())?;
-        let args = swig::actions::sign_v2::SignV2Args::new(role_id, instruction_payload_len);
+        let args = SignV2Args::new(role_id, instruction_payload_len);
         let arg_bytes = args
             .into_bytes()
             .map_err(|e| anyhow::anyhow!("Failed to serialize args {:?}", e))?;
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &ix_bytes, &[2]].concat(),
         })
@@ -672,7 +651,7 @@ impl SignV2Instruction {
 
         let ix_bytes = ixs.into_bytes()?;
         let instruction_payload_len = u16::try_from(ix_bytes.len())?;
-        let args = swig::actions::sign_v2::SignV2Args::new(role_id, instruction_payload_len);
+        let args = SignV2Args::new(role_id, instruction_payload_len);
         let arg_bytes = args
             .into_bytes()
             .map_err(|e| anyhow::anyhow!("Failed to serialize args {:?}", e))?;
@@ -681,7 +660,7 @@ impl SignV2Instruction {
             build_program_exec_authority_payload(instruction_sysvar_index, None);
 
         let sign_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &ix_bytes, &authority_payload].concat(),
         };
@@ -718,7 +697,7 @@ impl SignV2Instruction {
 
         let ix_bytes = ixs.into_bytes()?;
         let instruction_payload_len = u16::try_from(ix_bytes.len())?;
-        let args = swig::actions::sign_v2::SignV2Args::new(role_id, instruction_payload_len);
+        let args = SignV2Args::new(role_id, instruction_payload_len);
         let arg_bytes = args
             .into_bytes()
             .map_err(|e| anyhow::anyhow!("Failed to serialize args {:?}", e))?;
@@ -727,7 +706,7 @@ impl SignV2Instruction {
             build_program_exec_authority_payload(instruction_sysvar_index, Some(target_ix_index));
 
         let sign_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &ix_bytes, &authority_payload].concat(),
         };
@@ -789,7 +768,7 @@ impl SignV2Instruction {
         }
         let ix_bytes = ixs.into_bytes()?;
         let instruction_payload_len = u16::try_from(ix_bytes.len())?;
-        let args = swig::actions::sign_v2::SignV2Args::new(role_id, instruction_payload_len);
+        let args = SignV2Args::new(role_id, instruction_payload_len);
 
         let arg_bytes = args
             .into_bytes()
@@ -804,7 +783,7 @@ impl SignV2Instruction {
         )?;
 
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &ix_bytes, &authority_payload].concat(),
         })
@@ -868,7 +847,7 @@ impl SignV2Instruction {
         }
         let ix_bytes = ixs.into_bytes()?;
         let instruction_payload_len = u16::try_from(ix_bytes.len())?;
-        let args = swig::actions::sign_v2::SignV2Args::new(role_id, instruction_payload_len);
+        let args = SignV2Args::new(role_id, instruction_payload_len);
 
         let arg_bytes = args
             .into_bytes()
@@ -884,7 +863,7 @@ impl SignV2Instruction {
         )?;
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &ix_bytes, &authorization.authority_payload].concat(),
         };
@@ -949,7 +928,7 @@ impl RemoveAuthorityInstruction {
             .into_bytes()
             .map_err(|e| anyhow::anyhow!("Failed to serialize args {:?}", e))?;
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &[3]].concat(),
         })
@@ -988,7 +967,7 @@ impl RemoveAuthorityInstruction {
         )?;
 
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &authority_payload].concat(),
         })
@@ -1030,7 +1009,7 @@ impl RemoveAuthorityInstruction {
         )?;
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &authorization.authority_payload].concat(),
         };
@@ -1068,7 +1047,7 @@ impl RemoveAuthorityInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, None);
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &authority_payload].concat(),
         };
@@ -1107,7 +1086,7 @@ impl RemoveAuthorityInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, Some(target_ix_index));
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &authority_payload].concat(),
         };
@@ -1216,7 +1195,7 @@ impl UpdateAuthorityInstruction {
         write.extend_from_slice(&[3]); // Ed25519 authority type
 
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: write,
         })
@@ -1299,7 +1278,7 @@ impl UpdateAuthorityInstruction {
         )?;
 
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &encoded_data, &authority_payload].concat(),
         })
@@ -1387,7 +1366,7 @@ impl UpdateAuthorityInstruction {
         )?;
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [args_bytes, &encoded_data, &authorization.authority_payload].concat(),
         };
@@ -1438,7 +1417,7 @@ impl UpdateAuthorityInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, None);
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &encoded_data, &authority_payload].concat(),
         };
@@ -1489,7 +1468,7 @@ impl UpdateAuthorityInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, Some(target_ix_index));
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [arg_bytes, &encoded_data, &authority_payload].concat(),
         };
@@ -1521,7 +1500,7 @@ impl CreateSessionInstruction {
             .into_bytes()
             .map_err(|e| anyhow::anyhow!("Failed to serialize args {:?}", e))?;
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [args_bytes, &[2]].concat(),
         })
@@ -1560,7 +1539,7 @@ impl CreateSessionInstruction {
         )?;
 
         Ok(Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [args_bytes, &authority_payload].concat(),
         })
@@ -1602,7 +1581,7 @@ impl CreateSessionInstruction {
         )?;
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [args_bytes, &authorization.authority_payload].concat(),
         };
@@ -1640,7 +1619,7 @@ impl CreateSessionInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, None);
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [args_bytes, &authority_payload].concat(),
         };
@@ -1679,7 +1658,7 @@ impl CreateSessionInstruction {
             build_program_exec_authority_payload(instruction_sysvar_index, Some(target_ix_index));
 
         let main_ix = Instruction {
-            program_id: Pubkey::from(swig::ID),
+            program_id: Pubkey::from(PROGRAM_ID),
             accounts,
             data: [args_bytes, &authority_payload].concat(),
         };
