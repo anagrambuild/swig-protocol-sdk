@@ -1,7 +1,7 @@
 {
   "typescript": {
     "repository": "https://github.com/anagrambuild/swig-ts",
-    "revision": "5ca5557244c858245f247b49ffe4a0a9b3a0943d",
+    "revision": "96dd3470c6fe2b6a7bcd2db8287d6e55c73a3914",
     "paths": {
       "packages/classic": "typescript/packages/classic",
       "packages/kit": "typescript/packages/kit",

@@ -13,6 +13,7 @@ import { findSwigSubAccountPdaRaw } from '../../utils';
 import { Authority, SessionBasedAuthority } from '../abstract';
 import type { CreateAuthorityInfo } from '../createAuthority';
 import { Ed25519Instruction } from '../instructions';
+import type { InstructionDataOptions } from '../instructions/interface';
 import type { UpdateAuthorityActionsInfo } from '../updateAuthorityAction';
 import type { Ed25519BasedAuthority } from './based';
 
@@ -376,6 +377,58 @@ export class Ed25519SessionAuthority
         authorityData: this.sessionKey.toBytes(),
         roleId: args.roleId,
       },
+    );
+  }
+
+  addAuthorizationLock(args: {
+    payer: SolPublicKeyData;
+    swigAddress: SolPublicKeyData;
+    swigSystemAddress: SolPublicKeyData;
+    assetAccount: SolPublicKeyData;
+    mint?: SolPublicKeyData;
+    amount: bigint;
+    expirySlot: bigint;
+    roleId: number;
+    options?: InstructionDataOptions;
+  }) {
+    return Ed25519Instruction.addAuthorizationLockV1Instruction(
+      {
+        swig: args.swigAddress,
+        payer: args.payer,
+        swigSystemAddress: args.swigSystemAddress,
+        assetAccount: args.assetAccount,
+        mint: args.mint,
+      },
+      {
+        authorityData: this.sessionKey.toBytes(),
+        actingRoleId: args.roleId,
+        amount: args.amount,
+        expirySlot: args.expirySlot,
+      },
+      args.options,
+    );
+  }
+
+  removeAuthorizationLock(args: {
+    payer: SolPublicKeyData;
+    swigAddress: SolPublicKeyData;
+    rentClaimer?: SolPublicKeyData;
+    lockId: number;
+    roleId: number;
+    options?: InstructionDataOptions;
+  }) {
+    return Ed25519Instruction.removeAuthorizationLockV1Instruction(
+      {
+        swig: args.swigAddress,
+        payer: args.payer,
+        rentClaimer: args.rentClaimer,
+      },
+      {
+        authorityData: this.sessionKey.toBytes(),
+        actingRoleId: args.roleId,
+        lockId: args.lockId,
+      },
+      args.options,
     );
   }
 
