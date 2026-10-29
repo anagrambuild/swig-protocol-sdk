@@ -1,102 +1,34 @@
-# Swig protocol SDK
+# Swig Protocol SDK
 
-Thin bindings for Swig contract entry points, with typed authority, permission,
-and role codecs. The protocol SDK exposes individual calls. Applications and the
-developer SDK own orchestration, composite use cases, signing policy, retries,
-transaction submission policy, and deployment selection.
+[Documentation](https://build.onswig.com) · [Developer Portal](https://dashboard.onswig.com) · [Developer SDK](https://github.com/anagrambuild/swig-developer-sdk)
 
-```text
-evm/
-  abi/          canonical, version-pinned contract ABIs
-  typescript/   @swig-wallet/evm, using Viem
-  rust/         swig-evm, using Alloy
-  python/       swig-evm, using Web3.py
-  fixtures/     shared authority, permission, and ERC-4337 wire vectors
-  integration/  local contract tests, outside the shipped SDKs
-solana/
-  typescript/   @swig-wallet/{classic,kit,lib,coder} protocol packages
-  rust/         swig-sdk and swig-interface
-  python/       reserved
-```
+Low-level SDKs for building Swig protocol instructions, calling contracts, and
+decoding account or contract data. For hosted wallet API flows that prepare
+transactions for your application to sign, use the
+[Developer SDK](https://github.com/anagrambuild/swig-developer-sdk).
 
-The Solana TypeScript and Rust packages are copied from `swig-ts` and
-`swig-wallet`. Their source revisions and path mappings are recorded in
-[`solana/source.json`](solana/source.json). The Rust SDK keeps its on-chain
-dependencies pinned to the same `swig-wallet` revision. See the
-[Solana SDK README](solana/README.md) for package layout and build commands.
+## Packages
 
-The EVM packages cover `SwigConfig`, `SwigConfigFactory`, `SwigVault`, and
-`SwigCapsule`, including reads, writes, digest functions, events, and custom
-errors. See the [TypeScript](evm/typescript/README.md),
-[Rust](evm/rust/README.md), [Python](evm/python/README.md), and
-[protocol data](evm/README.md) documentation. Each language has an `examples/`
-folder organized by wallet scenarios: creation, adding and reading roles, direct
-transfers, and sponsored transfers.
-Packages are currently unpublished.
+| Chain | Language | Packages | Guide |
+| --- | --- | --- | --- |
+| Solana | TypeScript | `@swig-wallet/classic`, `kit`, `lib`, `coder` | [Solana SDK](solana/README.md) |
+| Solana | Rust | `swig-sdk`, `swig-interface` | [Solana SDK](solana/README.md) |
+| EVM | TypeScript | `@swig-wallet/evm` | [TypeScript](evm/typescript/README.md) |
+| EVM | Rust | `swig-evm` | [Rust](evm/rust/README.md) |
+| EVM | Python | `swig-evm` | [Python](evm/python/README.md) |
 
-## Networks
+Each language lives in its own directory under `solana/` or `evm/`. The package
+guides cover setup and usage. [EVM protocol notes](evm/README.md) describe
+supported authorities, permissions, authorization, and verification.
 
-EVM networks share one SDK. Callers supply a Viem client, Alloy provider, or Web3 instance
-configured with their RPC, chain ID, signer, and chain-specific transaction
-options, plus the address of a matching Swig deployment. ABI compatibility alone
-does not establish that a deployment exists or that every execution path is
-supported by a network. Chain selection is separate from protocol encoding.
+## Source revisions
 
-The type tests check custom EVM clients and Tempo-specific clients/providers;
-runtime tests use isolated Anvil. Live Robinhood and Tempo deployments have not
-been validated by this repository.
+- [Solana source mapping](solana/source.json) records the exact `swig-ts` and
+  `swig-wallet` revisions copied here. The Rust crates pin their on-chain
+  dependencies to the matching `swig-wallet` revision.
+- [EVM ABI source](evm/abi/source.json) records the contract revision behind
+  the shared ABI snapshot. Update the canonical ABI before regenerating
+  language bindings.
 
-## Development
-
-Requires Python 3.11+ with uv, Bun 1.3.13, and Rust 1.97.0 (pinned in `evm`).
-
-```bash
-cd evm/typescript
-bun install --frozen-lockfile
-bun run check
-python3 ../scripts/test-typescript-package.py
-cd ..
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
-cargo test --workspace --locked
-cargo package -p swig-evm --locked
-cd python
-uv sync --locked
-uv run ruff check .
-uv run ruff format --check .
-uv run pytest
-uv build
-```
-
-`python3 evm/scripts/sync-abis.py` regenerates the TypeScript ABI constants and
-the Rust and Python JSON copies from `evm/abi`. CI checks exact equality; edit the
-canonical snapshot first. Both packages include their own ABI files, so builds
-do not depend on the source repository or a parent directory.
-
-For runtime tests, install Foundry 1.7.1 and provide a clone of the contracts
-repository containing the revision in `evm/abi/source.json`:
-
-```bash
-python3 evm/scripts/test-integration.py --contracts-repo /path/to/swig-dev-portal
-```
-
-The runner archives that exact revision into a temporary directory, compiles it,
-compares all four ABIs, and starts a disposable localhost Anvil node. Both
-languages exercise factory address prediction/deployment, role reads and
-mutations, native and ERC-20 limits, an exact over-limit rejection, per-role
-authorization digests/nonces, and capsule execution. TypeScript also validates
-fresh shared permission vectors through the actual Solidity validation library.
-Authority cryptographic runtime coverage currently uses secp256k1; the other
-authority variants have wire-format tests. Test accounts are public Anvil
-accounts and must never hold real assets.
-
-CI runs codec, network type, formatting, lint, build, and package checks. The
-runtime runner is local because the pinned contracts repository is private;
-the SDK CI has no credential for it.
-
-For ERC-4337 and all three languages' examples, use the Compose runner with
-Anvil and Rundler described in the [integration guide](evm/typescript/README.md#verification-and-deployment-policy):
-
-```bash
-evm/scripts/test-4337.sh /path/to/swig-dev-portal
-```
+Packages are not yet published from this repository. See the chain guides for
+local builds and tests.

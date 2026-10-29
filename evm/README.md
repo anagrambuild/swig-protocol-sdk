@@ -84,3 +84,50 @@ same vectors. `fixtures/authorities.json` covers the four supported wire shapes;
 its coordinate/key placeholders are not cryptographic test vectors.
 `fixtures/4337.json` pins Viem-generated SignV2/capsule envelopes and canonical
 EntryPoint hash-call data, checked by the Rust and Python adapters.
+
+## Networks and verification
+
+Callers configure the RPC, chain ID, signer, transaction options, and a matching
+Swig deployment address through Viem, Alloy, or Web3.py. ABI compatibility does
+not prove a deployment exists or that every execution path is supported there.
+The type checks include custom and Tempo clients; runtime tests use isolated
+Anvil. This repository has not validated live Robinhood or Tempo deployments.
+
+Run `python3 evm/scripts/sync-abis.py` from the repository root after editing
+`evm/abi`. CI checks the generated TypeScript, Rust, and Python ABI copies
+against that canonical snapshot. Check the packages from the repository root:
+
+```bash
+cd evm/typescript
+bun install --frozen-lockfile
+bun run check
+bun run typecheck:integration
+python3 ../scripts/test-typescript-package.py
+cd ..
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --locked
+cargo package -p swig-evm --locked
+cd python
+uv sync --locked
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+uv build
+```
+
+With Foundry 1.7.1 and a local contracts checkout containing the revision in
+[`abi/source.json`](abi/source.json), run the integration suite from the
+repository root:
+
+```bash
+python3 evm/scripts/test-integration.py --contracts-repo /path/to/swig-dev-portal
+```
+
+The runner archives the pinned contract revision, compares ABIs, and tests
+factory deployment, role operations, limits, digests, and capsule execution on
+disposable Anvil. The contracts repository is private, so this runner is local.
+Cryptographic runtime coverage currently uses secp256k1; the other authority
+variants have wire-format tests.
+For ERC-4337 scenarios, use `evm/scripts/test-4337.sh /path/to/swig-dev-portal`
+and the [integration guide](typescript/README.md#verification-and-deployment-policy).
