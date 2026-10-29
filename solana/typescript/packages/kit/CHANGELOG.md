@@ -1,10 +1,10 @@
-# @swig-wallet/classic
+# @swig-wallet/kit
 
 ## 2.2.0
 
 ### Minor Changes
 
-- 74aeb26: Add authorization-lock account codecs, instruction builders, and client helpers for native SOL and token reservations, including session authorities. These APIs require a Swig program deployment with authorization-lock support.
+- 74aeb26: Add authorization-lock instruction builders and readers for applications using Solana Kit, including session authorities. These APIs require a Swig program deployment with authorization-lock support.
 
   Publish from the Swig Protocol SDK repository with updated package links, concrete internal dependency versions, and the Apache-2.0 license included in each package.
 
