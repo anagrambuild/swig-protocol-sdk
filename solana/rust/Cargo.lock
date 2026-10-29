@@ -3905,7 +3905,7 @@ dependencies = [
 [[package]]
 name = "no-padding"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=eefb531bc7649313d2d9951efe2030775466ca11#eefb531bc7649313d2d9951efe2030775466ca11"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=07b6f1bf6b38a4117543de21c1807cb35e568af5#07b6f1bf6b38a4117543de21c1807cb35e568af5"
 dependencies = [
  "proc-macro2 1.0.106",
  "quote 1.0.45",
@@ -4169,6 +4169,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "p256"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9863ad85fa8f4460f9c48cb909d38a0d689dba1f6f6988a5e3e0d31071bcd4b"
+dependencies = [
+ "elliptic-curve",
+ "primeorder",
+]
+
+[[package]]
 name = "pairing"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4411,6 +4421,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
  "zerocopy",
+]
+
+[[package]]
+name = "primeorder"
+version = "0.13.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "353e1ca18966c16d9deb1c69278edbc5f194139612772bd9537af60ac231e1e6"
+dependencies = [
+ "elliptic-curve",
 ]
 
 [[package]]
@@ -8647,7 +8666,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "swig"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=eefb531bc7649313d2d9951efe2030775466ca11#eefb531bc7649313d2d9951efe2030775466ca11"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=07b6f1bf6b38a4117543de21c1807cb35e568af5#07b6f1bf6b38a4117543de21c1807cb35e568af5"
 dependencies = [
  "anyhow",
  "bs58",
@@ -8662,6 +8681,7 @@ dependencies = [
  "shank",
  "shank_idl",
  "solana-security-txt",
+ "solana-sha256-hasher",
  "static_assertions",
  "swig-assertions",
  "swig-compact-instructions",
@@ -8671,7 +8691,7 @@ dependencies = [
 [[package]]
 name = "swig-assertions"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=eefb531bc7649313d2d9951efe2030775466ca11#eefb531bc7649313d2d9951efe2030775466ca11"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=07b6f1bf6b38a4117543de21c1807cb35e568af5#07b6f1bf6b38a4117543de21c1807cb35e568af5"
 dependencies = [
  "pinocchio 0.9.0",
  "pinocchio-pubkey 0.3.0",
@@ -8681,7 +8701,7 @@ dependencies = [
 [[package]]
 name = "swig-compact-instructions"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=eefb531bc7649313d2d9951efe2030775466ca11#eefb531bc7649313d2d9951efe2030775466ca11"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=07b6f1bf6b38a4117543de21c1807cb35e568af5#07b6f1bf6b38a4117543de21c1807cb35e568af5"
 dependencies = [
  "bs58",
  "pinocchio 0.9.0",
@@ -8695,12 +8715,17 @@ version = "3.0.0"
 dependencies = [
  "anyhow",
  "bytemuck",
+ "hex",
+ "openssl",
+ "serde",
+ "serde_json",
  "solana-sdk",
  "solana-secp256r1-program",
  "solana-system-interface 3.2.0",
  "swig",
  "swig-compact-instructions",
  "swig-state",
+ "thiserror 2.0.20",
 ]
 
 [[package]]
@@ -8723,6 +8748,7 @@ dependencies = [
  "solana-address-lookup-table-interface",
  "solana-client",
  "solana-commitment-config",
+ "solana-compute-budget-interface",
  "solana-program 3.0.0",
  "solana-sdk",
  "solana-secp256r1-program",
@@ -8738,13 +8764,15 @@ dependencies = [
 [[package]]
 name = "swig-state"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=eefb531bc7649313d2d9951efe2030775466ca11#eefb531bc7649313d2d9951efe2030775466ca11"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=07b6f1bf6b38a4117543de21c1807cb35e568af5#07b6f1bf6b38a4117543de21c1807cb35e568af5"
 dependencies = [
  "libsecp256k1",
  "murmur3",
  "no-padding",
+ "p256",
  "pinocchio 0.9.0",
  "pinocchio-pubkey 0.3.0",
+ "solana-curve25519 3.1.11",
  "swig-assertions",
 ]
 
