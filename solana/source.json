@@ -11,7 +11,7 @@
   },
   "rust": {
     "repository": "https://github.com/anagrambuild/swig-wallet",
-    "revision": "07b6f1bf6b38a4117543de21c1807cb35e568af5",
+    "revision": "c5edad67f82958f7fb282634ad91c752602e76ca",
     "paths": {
       "rust-sdk": "rust/sdk",
       "interface": "rust/interface",
