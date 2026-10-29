@@ -1,7 +1,7 @@
 {
   "typescript": {
     "repository": "https://github.com/anagrambuild/swig-ts",
-    "revision": "02bf2cad5c1fb65ddb5dade0143a9b4961f90417",
+    "revision": "5ca5557244c858245f247b49ffe4a0a9b3a0943d",
     "paths": {
       "packages/classic": "typescript/packages/classic",
       "packages/kit": "typescript/packages/kit",
@@ -11,10 +11,11 @@
   },
   "rust": {
     "repository": "https://github.com/anagrambuild/swig-wallet",
-    "revision": "eefb531bc7649313d2d9951efe2030775466ca11",
+    "revision": "07b6f1bf6b38a4117543de21c1807cb35e568af5",
     "paths": {
       "rust-sdk": "rust/sdk",
-      "interface": "rust/interface"
+      "interface": "rust/interface",
+      "program/idl.json": "rust/interface/tests/data/program-idl.json"
     },
     "protocol_dependencies": [
       "swig",

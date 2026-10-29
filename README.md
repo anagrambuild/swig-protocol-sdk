@@ -14,10 +14,16 @@ evm/
   fixtures/     shared authority, permission, and ERC-4337 wire vectors
   integration/  local contract tests, outside the shipped SDKs
 solana/
-  typescript/   reserved
-  rust/         reserved
+  typescript/   @swig-wallet/{classic,kit,lib,coder} protocol packages
+  rust/         swig-sdk and swig-interface
   python/       reserved
 ```
+
+The Solana TypeScript and Rust packages are copied from `swig-ts` and
+`swig-wallet`. Their source revisions and path mappings are recorded in
+[`solana/source.json`](solana/source.json). The Rust SDK keeps its on-chain
+dependencies pinned to the same `swig-wallet` revision. See the
+[Solana SDK README](solana/README.md) for package layout and build commands.
 
 The EVM packages cover `SwigConfig`, `SwigConfigFactory`, `SwigVault`, and
 `SwigCapsule`, including reads, writes, digest functions, events, and custom
