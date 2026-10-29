@@ -7,6 +7,10 @@
     "url": "https://github.com/anagrambuild/swig-protocol-sdk",
     "directory": "solana/typescript/packages/kit"
   },
+  "homepage": "https://github.com/anagrambuild/swig-protocol-sdk/tree/main/solana/typescript/packages/kit",
+  "bugs": {
+    "url": "https://github.com/anagrambuild/swig-protocol-sdk/issues"
+  },
   "type": "module",
   "scripts": {
     "build-pkg": "tsup-node",

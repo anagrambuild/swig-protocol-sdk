@@ -1,3 +1,5 @@
-# Swig TS SDK
+# @swig-wallet/kit
 
-This module hosts the source for interacting with the Swig program in typescript.
+Solana protocol SDK for `@solana/kit` applications.
+
+[Source](https://github.com/anagrambuild/swig-protocol-sdk/tree/main/solana/typescript/packages/kit) · [Solana SDK guide](https://github.com/anagrambuild/swig-protocol-sdk/blob/main/solana/README.md)

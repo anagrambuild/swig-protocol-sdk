@@ -1,3 +1,5 @@
-# Swig TS SDK
+# @swig-wallet/lib
 
-This module hosts the source for interacting with the Swig program in typescript.
+Core Solana protocol instruction builders, authority types, and account readers.
+
+[Source](https://github.com/anagrambuild/swig-protocol-sdk/tree/main/solana/typescript/packages/lib) · [Solana SDK guide](https://github.com/anagrambuild/swig-protocol-sdk/blob/main/solana/README.md)
