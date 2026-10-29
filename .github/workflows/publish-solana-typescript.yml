@@ -1,0 +1,88 @@
+name: Publish Solana TypeScript
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/publish-solana-typescript.yml
+      - solana/scripts/build-test-programs.py
+      - solana/source.json
+      - solana/typescript/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-solana-typescript.yml
+      - solana/scripts/build-test-programs.py
+      - solana/source.json
+      - solana/typescript/**
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: solana/typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run format
+      - uses: dtolnay/rust-toolchain@1.96.1
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+      - name: Install Solana CLI and SBF compiler
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.2.2/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+          cargo install cargo-build-sbf --version 4.0.0 --locked --force
+        working-directory: .
+      - name: Build pinned program fixtures
+        run: |
+          git init "$RUNNER_TEMP/swig-wallet"
+          git -C "$RUNNER_TEMP/swig-wallet" remote add origin https://github.com/anagrambuild/swig-wallet.git
+          revision=$(python3 -c 'import json; print(json.load(open("solana/source.json"))["rust"]["revision"])')
+          git -C "$RUNNER_TEMP/swig-wallet" fetch --depth=1 origin "$revision"
+          python3 solana/scripts/build-test-programs.py --program-repo "$RUNNER_TEMP/swig-wallet"
+        working-directory: .
+      - run: bun run test
+
+  release:
+    if: github.event_name == 'push'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: solana/typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - run: bun install --frozen-lockfile
+      - run: npm install --global npm@^11.5.1
+      - name: Create version PR or publish packages
+        uses: changesets/action@v1
+        with:
+          cwd: solana/typescript
+          version: bun run version:packages
+          publish: bun run release
+          prDraft: create
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
