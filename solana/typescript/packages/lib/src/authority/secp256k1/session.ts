@@ -453,6 +453,7 @@ export class Secp256k1SessionAuthority
         amount: args.amount,
         expirySlot: args.expirySlot,
       },
+      args.options,
     );
   }
 
@@ -475,6 +476,7 @@ export class Secp256k1SessionAuthority
         actingRoleId: args.roleId,
         lockId: args.lockId,
       },
+      args.options,
     );
   }
 

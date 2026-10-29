@@ -438,6 +438,7 @@ export class ProgramExecSessionAuthority
         amount: args.amount,
         expirySlot: args.expirySlot,
       },
+      args.options,
     );
   }
 
@@ -460,6 +461,7 @@ export class ProgramExecSessionAuthority
         actingRoleId: args.roleId,
         lockId: args.lockId,
       },
+      args.options,
     );
   }
 

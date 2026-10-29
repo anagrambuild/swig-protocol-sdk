@@ -255,7 +255,7 @@ export const Ed25519Instruction: AuthorityInstruction = {
     });
   },
 
-  async addAuthorizationLockV1Instruction(accounts, data) {
+  async addAuthorizationLockV1Instruction(accounts, data, options) {
     const authority = new SolPublicKey(new Uint8Array(data.authorityData));
 
     const [metas, authorityPayload] =
@@ -264,15 +264,22 @@ export const Ed25519Instruction: AuthorityInstruction = {
         authority,
       );
 
-    return SwigInstructionV1.addAuthorizationLock(metas, {
-      ...data,
-      assetAccount: new SolPublicKey(accounts.assetAccount).toBytes(),
-      mint: getAuthorizationLockMintBytes(accounts.mint),
-      authorityPayload: Uint8Array.from([authorityPayload]),
-    });
+    return SwigInstructionV1.addAuthorizationLock(
+      metas,
+      {
+        ...data,
+        assetAccount: new SolPublicKey(accounts.assetAccount).toBytes(),
+        mint: getAuthorizationLockMintBytes(accounts.mint),
+        authorityPayload: Uint8Array.from([authorityPayload]),
+      },
+      {
+        preInstructions: options?.preInstructions ?? [],
+        postInstructions: options?.postInstructions ?? [],
+      },
+    );
   },
 
-  async removeAuthorizationLockV1Instruction(accounts, data) {
+  async removeAuthorizationLockV1Instruction(accounts, data, options) {
     const authority = new SolPublicKey(new Uint8Array(data.authorityData));
 
     const [metas, authorityPayload] =
@@ -281,9 +288,16 @@ export const Ed25519Instruction: AuthorityInstruction = {
         authority,
       );
 
-    return SwigInstructionV1.removeAuthorizationLock(metas, {
-      ...data,
-      authorityPayload: Uint8Array.from([authorityPayload]),
-    });
+    return SwigInstructionV1.removeAuthorizationLock(
+      metas,
+      {
+        ...data,
+        authorityPayload: Uint8Array.from([authorityPayload]),
+      },
+      {
+        preInstructions: options?.preInstructions ?? [],
+        postInstructions: options?.postInstructions ?? [],
+      },
+    );
   },
 };

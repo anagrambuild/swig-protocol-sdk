@@ -539,10 +539,17 @@ export const Secp256k1Instruction: AuthorityInstruction = {
       },
     );
 
-    return SwigInstructionV1.addAuthorizationLock(accountMetas, {
-      ...lockData,
-      authorityPayload,
-    });
+    return SwigInstructionV1.addAuthorizationLock(
+      accountMetas,
+      {
+        ...lockData,
+        authorityPayload,
+      },
+      {
+        preInstructions: options.preInstructions ?? [],
+        postInstructions: options.postInstructions ?? [],
+      },
+    );
   },
 
   async removeAuthorizationLockV1Instruction(accounts, data, options) {
@@ -568,10 +575,17 @@ export const Secp256k1Instruction: AuthorityInstruction = {
       },
     );
 
-    return SwigInstructionV1.removeAuthorizationLock(accountMetas, {
-      ...data,
-      authorityPayload,
-    });
+    return SwigInstructionV1.removeAuthorizationLock(
+      accountMetas,
+      {
+        ...data,
+        authorityPayload,
+      },
+      {
+        preInstructions: options.preInstructions ?? [],
+        postInstructions: options.postInstructions ?? [],
+      },
+    );
   },
 };
 

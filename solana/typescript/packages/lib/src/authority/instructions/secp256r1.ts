@@ -747,7 +747,10 @@ export const Secp256r1Instruction: AuthorityInstruction = {
         ...lockData,
         authorityPayload,
       },
-      { preInstructions: [sigVerifyIx], postInstructions: [] },
+      {
+        preInstructions: [...(options.preInstructions ?? []), sigVerifyIx],
+        postInstructions: options.postInstructions ?? [],
+      },
     );
   },
 
@@ -788,7 +791,10 @@ export const Secp256r1Instruction: AuthorityInstruction = {
         ...data,
         authorityPayload,
       },
-      { preInstructions: [sigVerifyIx], postInstructions: [] },
+      {
+        preInstructions: [...(options.preInstructions ?? []), sigVerifyIx],
+        postInstructions: options.postInstructions ?? [],
+      },
     );
   },
 };

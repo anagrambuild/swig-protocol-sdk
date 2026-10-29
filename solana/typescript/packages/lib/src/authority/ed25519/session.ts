@@ -13,6 +13,7 @@ import { findSwigSubAccountPdaRaw } from '../../utils';
 import { Authority, SessionBasedAuthority } from '../abstract';
 import type { CreateAuthorityInfo } from '../createAuthority';
 import { Ed25519Instruction } from '../instructions';
+import type { InstructionDataOptions } from '../instructions/interface';
 import type { UpdateAuthorityActionsInfo } from '../updateAuthorityAction';
 import type { Ed25519BasedAuthority } from './based';
 
@@ -388,6 +389,7 @@ export class Ed25519SessionAuthority
     amount: bigint;
     expirySlot: bigint;
     roleId: number;
+    options?: InstructionDataOptions;
   }) {
     return Ed25519Instruction.addAuthorizationLockV1Instruction(
       {
@@ -403,6 +405,7 @@ export class Ed25519SessionAuthority
         amount: args.amount,
         expirySlot: args.expirySlot,
       },
+      args.options,
     );
   }
 
@@ -412,6 +415,7 @@ export class Ed25519SessionAuthority
     rentClaimer?: SolPublicKeyData;
     lockId: number;
     roleId: number;
+    options?: InstructionDataOptions;
   }) {
     return Ed25519Instruction.removeAuthorizationLockV1Instruction(
       {
@@ -424,6 +428,7 @@ export class Ed25519SessionAuthority
         actingRoleId: args.roleId,
         lockId: args.lockId,
       },
+      args.options,
     );
   }
 

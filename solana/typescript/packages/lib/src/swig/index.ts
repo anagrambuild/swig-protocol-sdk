@@ -681,7 +681,7 @@ export const getAddAuthorizationLockInstructionContext = async <
   const { payer, role } = await assertInstructionOptions(
     swig,
     roleId,
-    false,
+    true,
     options,
   );
 
@@ -810,7 +810,7 @@ export const getRemoveAuthorizationLockInstructionContext = async <
   const { payer, role } = await assertInstructionOptions(
     swig,
     roleId,
-    false,
+    true,
     options,
   );
 
@@ -830,7 +830,7 @@ export const getRemoveAuthorizationLockInstructionContext = async <
 async function assertInstructionOptions(
   swig: Swig,
   roleId: number,
-  isSignIx: boolean,
+  useSignerAsPayer: boolean,
   options?: SwigOptions,
 ) {
   if (options?.preFetch) {
@@ -846,12 +846,12 @@ async function assertInstructionOptions(
   if (options?.payer) {
     payerBytes = options.payer;
   } else if (
-    isSignIx &&
+    useSignerAsPayer &&
     (isEd25519BasedAuthority(role.authority) ||
       isSessionBasedAuthority(role.authority))
   ) {
     payerBytes = role.authority.signer;
-  } else if (!isSignIx && isEd25519BasedAuthority(role.authority)) {
+  } else if (!useSignerAsPayer && isEd25519BasedAuthority(role.authority)) {
     payerBytes = role.authority.id;
   }
 

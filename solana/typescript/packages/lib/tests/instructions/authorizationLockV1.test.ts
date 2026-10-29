@@ -7,6 +7,16 @@
  */
 
 import {
+  createAssociatedTokenAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  getAssociatedTokenAddressSync,
+  MINT_SIZE,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import { SystemProgram } from '@solana/web3.js';
+import {
   getAddAuthorizationLockV1InstructionDataCodec,
   getRemoveAuthorizationLockV1InstructionDataCodec,
   identifySwigInstruction,
@@ -15,18 +25,38 @@ import {
 import {
   Actions,
   createEd25519AuthorityInfo,
+  createEd25519SessionAuthorityInfo,
   Ed25519Instruction,
   findSwigPdaRaw,
   getAddSolAuthorizationLockInstructionContext,
+  getAddTokenAuthorizationLockInstructionContext,
+  getCreateSessionInstructionContext,
   getCreateSwigInstructionContext,
   getRemoveAuthorizationLockInstructionContext,
   getSwigWalletAddressRaw,
   Secp256k1Instruction,
+  SolInstruction,
   SolPublicKey,
-  type SolInstruction,
 } from '../../src';
-import { fetchSwig, getFundedKeys, getSvm } from '../context';
-import { randomBytes, sendSwigSVMTransaction, toPublicKey } from '../helpers';
+import {
+  fetchSwig,
+  getFundedKeys,
+  getSvm,
+  getSvmWithTestProgram,
+} from '../context';
+import {
+  createTestProgramExecAuthority,
+  createTestSecp256k1Authority,
+  createTestSecp256r1Authority,
+} from '../fixtures/authorities';
+import {
+  createTestProgramPreInstruction,
+  generateTestKeypair,
+  randomBytes,
+  sendSVMTransaction,
+  sendSwigSVMTransaction,
+  toPublicKey,
+} from '../helpers';
 
 const pk = (byte: number) => new SolPublicKey(new Uint8Array(32).fill(byte));
 
@@ -54,6 +84,19 @@ describe('AuthorizationLockV1 instructions', () => {
   test('adds and removes a SOL lock against the pinned program', async () => {
     const svm = getSvm();
     const [root] = getFundedKeys(svm, 1);
+    const recipient = generateTestKeypair();
+    svm.airdrop(recipient.publicKey, 1_000_000n);
+    const transfer = SolInstruction.from(
+      SystemProgram.transfer({
+        fromPubkey: root.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: 1,
+      }),
+    );
+    const options = {
+      preInstructions: [transfer],
+      postInstructions: [transfer],
+    };
     const swigId = randomBytes(32);
     const [swigAddress] = await findSwigPdaRaw(swigId);
     const create = await getCreateSwigInstructionContext({
@@ -79,6 +122,7 @@ describe('AuthorizationLockV1 instructions', () => {
         amount: 1_000_000_000n,
         expirySlot: currentSlot + 100n,
       },
+      options,
     );
     sendSwigSVMTransaction(svm, add, root);
 
@@ -106,10 +150,313 @@ describe('AuthorizationLockV1 instructions', () => {
       swig,
       roleId,
       { lockId: 0 },
+      options,
     );
     sendSwigSVMTransaction(svm, remove, root);
+    expect(svm.getAccount(recipient.publicKey)?.lamports).toBe(1_000_004);
     swig = fetchSwig(svm, swigAddress);
     expect(swig.authorizationLocks()).toEqual({ nextLockId: 1, locks: [] });
+  });
+
+  test('session key adds and removes a lock with its default payer', async () => {
+    const svm = getSvm();
+    const [root, sessionKeypair] = getFundedKeys(svm, 2);
+    const swigId = randomBytes(32);
+    const [swigAddress] = await findSwigPdaRaw(swigId);
+    const create = await getCreateSwigInstructionContext({
+      authorityInfo: createEd25519SessionAuthorityInfo(root.publicKey, 100n),
+      id: swigId,
+      payer: root.publicKey,
+      actions: Actions.set()
+        .all()
+        .manageAuthorizationLocks({ maxDurationSlots: 100n })
+        .get(),
+    });
+    sendSwigSVMTransaction(svm, create, root);
+
+    let swig = fetchSwig(svm, swigAddress);
+    const createSession = await getCreateSessionInstructionContext(
+      swig,
+      swig.roles[0].id,
+      sessionKeypair.publicKey,
+      50n,
+    );
+    sendSwigSVMTransaction(svm, createSession, root);
+
+    swig = fetchSwig(svm, swigAddress);
+    const role = swig.findRoleBySessionKey(sessionKeypair.publicKey);
+    expect(role).toBeDefined();
+    const walletAddress = toPublicKey(await getSwigWalletAddressRaw(swig));
+    svm.airdrop(walletAddress, 2_000_000_000n);
+    const add = await getAddSolAuthorizationLockInstructionContext(
+      swig,
+      role!.id,
+      {
+        amount: 1_000_000_000n,
+        expirySlot: BigInt(svm.getClock().slot) + 20n,
+      },
+    );
+    sendSwigSVMTransaction(svm, add, sessionKeypair);
+
+    swig = fetchSwig(svm, swigAddress);
+    const locks = swig.authorizationLocks().locks;
+    expect(locks).toMatchObject([{ roleId: role!.id, amount: 1_000_000_000n }]);
+    const remove = await getRemoveAuthorizationLockInstructionContext(
+      swig,
+      role!.id,
+      { lockId: locks[0].lockId },
+    );
+    sendSwigSVMTransaction(svm, remove, sessionKeypair);
+    expect(fetchSwig(svm, swigAddress).authorizationLocks().locks).toEqual([]);
+  });
+
+  for (const [name, createAuthority] of [
+    ['secp256k1', createTestSecp256k1Authority],
+    ['secp256r1', createTestSecp256r1Authority],
+  ] as const) {
+    test(`${name} adds and removes a SOL lock with a real signature`, async () => {
+      const svm = getSvm();
+      const [payer] = getFundedKeys(svm, 1);
+      const recipient = generateTestKeypair();
+      svm.airdrop(recipient.publicKey, 1_000_000n);
+      const transfer = SolInstruction.from(
+        SystemProgram.transfer({
+          fromPubkey: payer.publicKey,
+          toPubkey: recipient.publicKey,
+          lamports: 1,
+        }),
+      );
+      const authority = createAuthority();
+      const swigId = randomBytes(32);
+      const [swigAddress] = await findSwigPdaRaw(swigId);
+      const create = await getCreateSwigInstructionContext({
+        authorityInfo: authority.authorityInfo,
+        id: swigId,
+        payer: payer.publicKey,
+        actions: Actions.set()
+          .all()
+          .manageAuthorizationLocks({ maxDurationSlots: 100n })
+          .get(),
+      });
+      sendSwigSVMTransaction(svm, create, payer);
+
+      let swig = fetchSwig(svm, swigAddress);
+      const walletAddress = toPublicKey(await getSwigWalletAddressRaw(swig));
+      svm.airdrop(walletAddress, 2_000_000_000n);
+      const roleId = swig.roles[0].id;
+      const options = {
+        payer: payer.publicKey,
+        currentSlot: svm.getClock().slot,
+        signingFn: authority.signingFn ?? undefined,
+        preInstructions: [transfer],
+        postInstructions: [transfer],
+      };
+      const add = await getAddSolAuthorizationLockInstructionContext(
+        swig,
+        roleId,
+        {
+          amount: 1_000_000_000n,
+          expirySlot: BigInt(options.currentSlot) + 100n,
+        },
+        options,
+      );
+      sendSwigSVMTransaction(svm, add, payer);
+
+      swig = fetchSwig(svm, swigAddress);
+      const locks = swig.authorizationLocks().locks;
+      expect(locks).toMatchObject([{ roleId, amount: 1_000_000_000n }]);
+      const remove = await getRemoveAuthorizationLockInstructionContext(
+        swig,
+        roleId,
+        { lockId: locks[0].lockId },
+        options,
+      );
+      sendSwigSVMTransaction(svm, remove, payer);
+      expect(svm.getAccount(recipient.publicKey)?.lamports).toBe(1_000_004);
+      expect(fetchSwig(svm, swigAddress).authorizationLocks().locks).toEqual(
+        [],
+      );
+    });
+  }
+
+  for (const [name, tokenProgram] of [
+    ['SPL Token', TOKEN_PROGRAM_ID],
+    ['Token-2022', TOKEN_2022_PROGRAM_ID],
+  ] as const) {
+    test(`${name} lock uses the wallet ATA and rejects reservations above its balance`, async () => {
+      const svm = getSvm();
+      const [root] = getFundedKeys(svm, 1);
+      const swigId = randomBytes(32);
+      const [swigAddress] = await findSwigPdaRaw(swigId);
+      const create = await getCreateSwigInstructionContext({
+        authorityInfo: createEd25519AuthorityInfo(root.publicKey),
+        id: swigId,
+        payer: root.publicKey,
+        actions: Actions.set()
+          .all()
+          .manageAuthorizationLocks({ maxDurationSlots: 100n })
+          .get(),
+      });
+      sendSwigSVMTransaction(svm, create, root);
+
+      let swig = fetchSwig(svm, swigAddress);
+      const walletAddress = toPublicKey(await getSwigWalletAddressRaw(swig));
+      const mintKeypair = generateTestKeypair();
+      const mintAddress = mintKeypair.publicKey;
+      sendSVMTransaction(
+        svm,
+        [
+          SystemProgram.createAccount({
+            fromPubkey: root.publicKey,
+            newAccountPubkey: mintAddress,
+            lamports: Number(
+              svm.minimumBalanceForRentExemption(BigInt(MINT_SIZE)),
+            ),
+            space: MINT_SIZE,
+            programId: tokenProgram,
+          }),
+          createInitializeMintInstruction(
+            mintAddress,
+            0,
+            root.publicKey,
+            null,
+            tokenProgram,
+          ),
+        ],
+        root,
+        [mintKeypair],
+      );
+      const tokenAccount = getAssociatedTokenAddressSync(
+        mintAddress,
+        walletAddress,
+        true,
+        tokenProgram,
+      );
+      sendSVMTransaction(
+        svm,
+        [
+          createAssociatedTokenAccountInstruction(
+            root.publicKey,
+            tokenAccount,
+            walletAddress,
+            mintAddress,
+            tokenProgram,
+          ),
+          createMintToInstruction(
+            mintAddress,
+            tokenAccount,
+            root.publicKey,
+            1_000n,
+            [],
+            tokenProgram,
+          ),
+        ],
+        root,
+      );
+
+      const roleId = swig.roles[0].id;
+      const expirySlot = BigInt(svm.getClock().slot) + 100n;
+      const add = await getAddTokenAuthorizationLockInstructionContext(
+        swig,
+        roleId,
+        {
+          mint: mintAddress,
+          tokenProgram,
+          amount: 600n,
+          expirySlot,
+        },
+      );
+      sendSwigSVMTransaction(svm, add, root);
+
+      swig = fetchSwig(svm, swigAddress);
+      const locks = swig.authorizationLocks().locks;
+      expect(locks).toMatchObject([
+        {
+          assetAccount: tokenAccount.toBytes(),
+          mint: mintAddress.toBytes(),
+          amount: 600n,
+        },
+      ]);
+      const accountBeforeFailure = svm.getAccount(
+        toPublicKey(swigAddress),
+      )!.data;
+      const tooMuch = await getAddTokenAuthorizationLockInstructionContext(
+        swig,
+        roleId,
+        { mint: mintAddress, tokenProgram, amount: 401n, expirySlot },
+      );
+      expect(() => sendSwigSVMTransaction(svm, tooMuch, root)).toThrow(
+        'InstructionErrorCustom { code: 84 }',
+      );
+      expect(svm.getAccount(toPublicKey(swigAddress))!.data).toEqual(
+        accountBeforeFailure,
+      );
+
+      const remove = await getRemoveAuthorizationLockInstructionContext(
+        swig,
+        roleId,
+        { lockId: locks[0].lockId },
+      );
+      sendSwigSVMTransaction(svm, remove, root);
+      expect(fetchSwig(svm, swigAddress).authorizationLocks().locks).toEqual(
+        [],
+      );
+    });
+  }
+
+  test('ProgramExec adds and removes a lock with its verified preinstruction', async () => {
+    const svm = getSvmWithTestProgram();
+    const [payer] = getFundedKeys(svm, 1);
+    const authority = createTestProgramExecAuthority();
+    const swigId = randomBytes(32);
+    const [swigAddress] = await findSwigPdaRaw(swigId);
+    const create = await getCreateSwigInstructionContext({
+      authorityInfo: authority.authorityInfo,
+      id: swigId,
+      payer: payer.publicKey,
+      actions: Actions.set()
+        .all()
+        .manageAuthorizationLocks({ maxDurationSlots: 100n })
+        .get(),
+    });
+    sendSwigSVMTransaction(svm, create, payer);
+
+    let swig = fetchSwig(svm, swigAddress);
+    const walletAddress = toPublicKey(await getSwigWalletAddressRaw(swig));
+    svm.airdrop(walletAddress, 2_000_000_000n);
+    const roleId = swig.roles[0].id;
+    const add = await getAddSolAuthorizationLockInstructionContext(
+      swig,
+      roleId,
+      {
+        amount: 1_000_000_000n,
+        expirySlot: BigInt(svm.getClock().slot) + 100n,
+      },
+      {
+        payer: payer.publicKey,
+        preInstructions: [
+          createTestProgramPreInstruction(swigAddress, payer.publicKey),
+        ],
+      },
+    );
+    sendSwigSVMTransaction(svm, add, payer);
+
+    swig = fetchSwig(svm, swigAddress);
+    const locks = swig.authorizationLocks().locks;
+    expect(locks).toMatchObject([{ roleId, amount: 1_000_000_000n }]);
+    const remove = await getRemoveAuthorizationLockInstructionContext(
+      swig,
+      roleId,
+      { lockId: locks[0].lockId },
+      {
+        payer: payer.publicKey,
+        preInstructions: [
+          createTestProgramPreInstruction(swigAddress, payer.publicKey),
+        ],
+      },
+    );
+    sendSwigSVMTransaction(svm, remove, payer);
+    expect(fetchSwig(svm, swigAddress).authorizationLocks().locks).toEqual([]);
   });
 
   test('discriminators are 25 and 26', () => {
