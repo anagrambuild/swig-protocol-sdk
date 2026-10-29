@@ -1,6 +1,6 @@
 {
   "name": "@swig-wallet/classic",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -45,8 +45,8 @@
     "@noble/curves": "^1.8.2",
     "@solana/kit": "^2.1.0",
     "@solana-program/token": "^0.5.1",
-    "@swig-wallet/coder": "2.1.0",
-    "@swig-wallet/lib": "2.1.0",
+    "@swig-wallet/coder": "2.2.0",
+    "@swig-wallet/lib": "2.2.0",
     "bn.js": "^5.2.2"
   },
   "peerDependencies": {
