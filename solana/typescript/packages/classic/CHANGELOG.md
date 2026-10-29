@@ -1,5 +1,19 @@
 # @swig-wallet/classic
 
+## 2.2.0
+
+### Minor Changes
+
+- 74aeb26: Add authorization-lock instruction builders and readers for applications using Solana web3.js, including session authorities. These APIs require a Swig program deployment with authorization-lock support.
+
+  Publish from the Swig Protocol SDK repository with updated package links, concrete internal dependency versions, and the Apache-2.0 license included in each package.
+
+### Patch Changes
+
+- Updated dependencies [74aeb26]
+  - @swig-wallet/coder@2.2.0
+  - @swig-wallet/lib@2.2.0
+
 ## 2.1.0
 
 ### Minor Changes
