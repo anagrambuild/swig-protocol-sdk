@@ -1,5 +1,13 @@
 # @swig-wallet/classic
 
+## 2.1.1
+
+### Patch Changes
+
+- 74aeb26: Point the published Solana TypeScript packages to the protocol SDK repository, use concrete versions for internal package dependencies, and include the Apache-2.0 license in each package.
+- Updated dependencies [74aeb26]
+  - @swig-wallet/coder@2.1.1
+
 ## 2.1.0
 
 ### Minor Changes
