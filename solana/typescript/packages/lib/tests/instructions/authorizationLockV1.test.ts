@@ -13,11 +13,20 @@ import {
   SwigInstructionDiscriminator,
 } from '@swig-wallet/coder';
 import {
+  Actions,
+  createEd25519AuthorityInfo,
   Ed25519Instruction,
+  findSwigPdaRaw,
+  getAddSolAuthorizationLockInstructionContext,
+  getCreateSwigInstructionContext,
+  getRemoveAuthorizationLockInstructionContext,
+  getSwigWalletAddressRaw,
   Secp256k1Instruction,
   SolPublicKey,
   type SolInstruction,
 } from '../../src';
+import { fetchSwig, getFundedKeys, getSvm } from '../context';
+import { randomBytes, sendSwigSVMTransaction, toPublicKey } from '../helpers';
 
 const pk = (byte: number) => new SolPublicKey(new Uint8Array(32).fill(byte));
 
@@ -42,6 +51,67 @@ const constantSigningFn = async () => ({
 });
 
 describe('AuthorizationLockV1 instructions', () => {
+  test('adds and removes a SOL lock against the pinned program', async () => {
+    const svm = getSvm();
+    const [root] = getFundedKeys(svm, 1);
+    const swigId = randomBytes(32);
+    const [swigAddress] = await findSwigPdaRaw(swigId);
+    const create = await getCreateSwigInstructionContext({
+      authorityInfo: createEd25519AuthorityInfo(root.publicKey),
+      id: swigId,
+      payer: root.publicKey,
+      actions: Actions.set()
+        .all()
+        .manageAuthorizationLocks({ maxDurationSlots: 100n })
+        .get(),
+    });
+    sendSwigSVMTransaction(svm, create, root);
+
+    let swig = fetchSwig(svm, swigAddress);
+    const walletAddress = toPublicKey(await getSwigWalletAddressRaw(swig));
+    svm.airdrop(walletAddress, 2_000_000_000n);
+    const roleId = swig.roles[0].id;
+    const currentSlot = BigInt(svm.getClock().slot);
+    const add = await getAddSolAuthorizationLockInstructionContext(
+      swig,
+      roleId,
+      {
+        amount: 1_000_000_000n,
+        expirySlot: currentSlot + 100n,
+      },
+    );
+    sendSwigSVMTransaction(svm, add, root);
+
+    swig = fetchSwig(svm, swigAddress);
+    expect(swig.authorizationLocks().nextLockId).toBe(1);
+    expect(swig.authorizationLocks().locks).toMatchObject([
+      { amount: 1_000_000_000n, roleId, lockId: 0 },
+    ]);
+    expect(swig.activeAuthorizationLocks(currentSlot).length).toBe(1);
+
+    const invalidRemove = await getRemoveAuthorizationLockInstructionContext(
+      swig,
+      roleId,
+      { lockId: 99 },
+    );
+    // The pinned program reports AuthorizationLockNotFound as custom error 86.
+    expect(() => sendSwigSVMTransaction(svm, invalidRemove, root)).toThrow(
+      'InstructionErrorCustom { code: 86 }',
+    );
+    expect(fetchSwig(svm, swigAddress).authorizationLocks()).toEqual(
+      swig.authorizationLocks(),
+    );
+
+    const remove = await getRemoveAuthorizationLockInstructionContext(
+      swig,
+      roleId,
+      { lockId: 0 },
+    );
+    sendSwigSVMTransaction(svm, remove, root);
+    swig = fetchSwig(svm, swigAddress);
+    expect(swig.authorizationLocks()).toEqual({ nextLockId: 1, locks: [] });
+  });
+
   test('discriminators are 25 and 26', () => {
     expect(SwigInstructionDiscriminator.AddAuthorizationLockV1).toBe(25);
     expect(SwigInstructionDiscriminator.RemoveAuthorizationLockV1).toBe(26);

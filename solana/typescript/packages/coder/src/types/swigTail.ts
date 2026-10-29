@@ -21,7 +21,8 @@ export const TAIL_HEADER_LENGTH = 8;
 
 /**
  * Kinds of typed entries stored in the swig config account's tail, after the
- * roles. Unknown kinds may appear and must be skipped by length.
+ * roles. Raw readers can preserve unknown kinds; validated wallet views reject
+ * them until the program defines their layout.
  */
 export enum SwigTailKind {
   RentClaimer = 1,

@@ -90,18 +90,17 @@ const tokenLock = lock({
 
 const mixedTail = concat(
   entry(1, 1, [0, 0, 0, 0], new Uint8Array(32).fill(7)),
-  entry(2, 1, [0, 0, 0, 0], Uint8Array.from([3, 0, 0, 0])),
+  entry(2, 1, [0, 0, 0, 0], Uint8Array.from([3, 0, 0, 0, 0, 0, 0, 0])),
   entry(3, 1, [3, 0, 0, 0], concat(solLock, tokenLock)),
   entry(4, 1, [0, 0, 0, 0], Uint8Array.from([0xaa, 0xbb])),
-  // unknown kind, skipped by length
-  entry(9, 1, [1, 2, 3, 4], Uint8Array.from([1, 2, 3])),
 );
+const unknownEntry = entry(9, 1, [1, 2, 3, 4], Uint8Array.from([1, 2, 3]));
 
 describe('swig tail', () => {
-  test('decodeSwigTail splits mixed entries by length', () => {
-    const entries = decodeSwigTail(mixedTail);
+  test('decodeSwigTail preserves unknown raw entries by length', () => {
+    const entries = decodeSwigTail(concat(mixedTail, unknownEntry));
     expect(entries.map((e) => e.header.kind)).toEqual([1, 2, 3, 4, 9]);
-    expect(entries.map((e) => e.value.length)).toEqual([32, 4, 176, 2, 3]);
+    expect(entries.map((e) => e.value.length)).toEqual([32, 8, 176, 2, 3]);
   });
 
   test('decodeAuthorizationLocks skips other entries', () => {
@@ -172,6 +171,84 @@ describe('swig tail', () => {
     expect(() =>
       decodeSwigTail(mixedTail.subarray(0, mixedTail.length - 1)),
     ).toThrow('truncated');
+  });
+
+  test('rejects lock records the on-chain validator rejects', () => {
+    const zeroAmount = lock({
+      asset: 4,
+      mint: 0,
+      amount: 0n,
+      expirySlot: 100n,
+      roleId: 0,
+      lockId: 0,
+    });
+    const cases: Array<[string, Uint8Array, string]> = [
+      ['zero amount', entry(3, 1, [1, 0, 0, 0], zeroAmount), 'record'],
+      [
+        'duplicate ids',
+        entry(3, 1, [3, 0, 0, 0], concat(solLock, solLock)),
+        'record',
+      ],
+      [
+        'descending ids',
+        entry(3, 1, [3, 0, 0, 0], concat(tokenLock, solLock)),
+        'record',
+      ],
+      ['id at next id', entry(3, 1, [2, 0, 0, 0], tokenLock), 'record'],
+      [
+        'over capacity',
+        entry(3, 1, [34, 0, 0, 0], concat(...Array(33).fill(solLock))),
+        'length',
+      ],
+    ];
+    for (const [, tail, error] of cases) {
+      expect(() => decodeAuthorizationLocks(tail)).toThrow(error);
+    }
+  });
+
+  test('typed readers reject malformed entries anywhere in the tail', () => {
+    const cases: Array<[string, Uint8Array, string]> = [
+      ['unknown kind', concat(mixedTail, unknownEntry), 'Unknown'],
+      [
+        'duplicate kind',
+        concat(mixedTail, entry(3, 1, [3, 0, 0, 0], new Uint8Array(0))),
+        'Duplicate',
+      ],
+      [
+        'rent version',
+        entry(1, 2, [0, 0, 0, 0], new Uint8Array(32)),
+        'version',
+      ],
+      [
+        'rent payload',
+        entry(1, 1, [1, 0, 0, 0], new Uint8Array(32)),
+        'rent claimer',
+      ],
+      [
+        'active count size',
+        entry(2, 1, [0, 0, 0, 0], new Uint8Array(4)),
+        'sub-account',
+      ],
+      [
+        'active count reserved',
+        entry(2, 1, [0, 0, 0, 0], Uint8Array.from([0, 0, 0, 0, 1, 0, 0, 0])),
+        'sub-account',
+      ],
+      [
+        'empty config prefix',
+        entry(4, 1, [0, 0, 0, 0], new Uint8Array(0)),
+        'prefix',
+      ],
+      [
+        'config prefix payload',
+        entry(4, 1, [1, 0, 0, 0], Uint8Array.from([1])),
+        'prefix',
+      ],
+    ];
+    for (const [, tail, error] of cases) {
+      expect(() => decodeAuthorizationLocks(tail)).toThrow(error);
+      expect(() => decodeRentClaimer(tail)).toThrow(error);
+    }
   });
 
   test('decodeRentClaimer reads the rent claimer entry', () => {
