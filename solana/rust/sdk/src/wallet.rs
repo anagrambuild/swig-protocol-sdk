@@ -24,7 +24,6 @@ use spl_associated_token_account::{
     instruction::create_associated_token_account,
 };
 use spl_token::ID as TOKEN_PROGRAM_ID;
-use swig_interface::swig;
 use swig_state::{
     action::{
         all::All, manage_authority::ManageAuthority,

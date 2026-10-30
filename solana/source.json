@@ -18,10 +18,12 @@
       "program/idl.json": "rust/interface/tests/data/program-idl.json"
     },
     "protocol_dependencies": [
-      "swig",
       "swig-state",
       "swig-compact-instructions"
+    ],
+    "test_dependencies": [
+      "swig"
     ]
   },
-  "scope": "Source import preserving existing SDK APIs. On-chain Rust dependencies remain pinned to swig-wallet. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
+  "scope": "Source import preserving SDK builders. Rust protocol dependencies and program compatibility tests remain pinned to swig-wallet; the program is not a production SDK dependency. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
 }
