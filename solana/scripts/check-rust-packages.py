@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Verify Rust release archives before their protocol dependencies are on crates.io."""
+"""Verify the SDK archive and an external consumer against released protocol crates."""
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -11,10 +12,13 @@ import tomllib
 from pathlib import Path
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--program-repo", type=Path, required=True)
+parser.add_argument(
+    "--local-dependencies",
+    action="store_true",
+    help="Check unpublished swig-wallet candidates; this is not a registry release check.",
+)
 args = parser.parse_args()
 rust = Path(__file__).resolve().parents[1] / "rust"
-wallet = args.program_repo.resolve()
 
 with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory:
     root = Path(directory)
@@ -23,39 +27,42 @@ with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory
     env = os.environ.copy()
     env["CARGO_TARGET_DIR"] = str(rust / "target")
     overrides = []
-    for name, path in [
-        ("no-padding", wallet / "no-padding"),
-        ("swig-assertions", wallet / "assertions"),
-        ("swig-state", wallet / "state"),
-        ("swig-compact-instructions", wallet / "instructions"),
-    ]:
-        overrides.extend(["--config", f'patch.crates-io.{name}.path="{path}"'])
-    workspace = tomllib.loads((source / "Cargo.toml").read_text())["workspace"]
-    version = workspace["package"]["version"]
-    for package in ["swig-interface", "swig-sdk"]:
-        subprocess.run(
-            ["cargo", "package", "-p", package, *overrides],
-            cwd=source,
-            env=env,
-            check=True,
-        )
-        archive = rust / "target/package" / f"{package}-{version}.crate"
-        with tarfile.open(archive) as tar:
-            names = tar.getnames()
-            prefix = f"{package}-{version}/"
-            assert prefix + "LICENSE.txt" in names
-            manifest_file = tar.extractfile(prefix + "Cargo.toml")
-            manifest = tomllib.loads(manifest_file.read().decode())
-            for dependency, settings in manifest.get("dependencies", {}).items():
-                assert dependency != "swig", "program leaked into published dependencies"
-                assert "git" not in settings and "path" not in settings
-            tar.extractall(root / "archives", filter="data")
-        if package == "swig-interface":
-            extracted_interface = root / "archives" / f"{package}-{version}"
-            overrides.extend([
-                "--config",
-                f'patch.crates-io.swig-interface.path="{extracted_interface}"',
-            ])
+    if args.local_dependencies:
+        metadata = json.loads(subprocess.check_output(
+            ["cargo", "metadata", "--locked", "--format-version", "1"],
+            cwd=source, env=env, text=True,
+        ))
+        revision = json.loads((rust.parent / "source.json").read_text())["rust"]["dependency_revision"]
+        for name in [
+            "swig-no-padding", "swig-assertions", "swig-compact-instructions",
+            "swig-state", "swig-interface",
+        ]:
+            candidates = [
+                package for package in metadata["packages"]
+                if package["name"] == name
+                and (package["source"] or "").endswith("#" + revision)
+            ]
+            if len(candidates) != 1:
+                raise RuntimeError(f"Expected one {name} from swig-wallet@{revision}")
+            path = Path(candidates[0]["manifest_path"]).parent
+            overrides.extend(["--config", f'patch.crates-io.{name}.path="{path}"'])
+
+    version = tomllib.loads((source / "Cargo.toml").read_text())["workspace"]["package"]["version"]
+    subprocess.run(
+        ["cargo", "package", "-p", "swig-sdk", *overrides],
+        cwd=source, env=env, check=True,
+    )
+    archive = rust / "target/package" / f"swig-sdk-{version}.crate"
+    with tarfile.open(archive) as tar:
+        prefix = f"swig-sdk-{version}/"
+        assert prefix + "LICENSE.txt" in tar.getnames()
+        manifest_file = tar.extractfile(prefix + "Cargo.toml")
+        manifest = tomllib.loads(manifest_file.read().decode())
+        for dependency, settings in manifest.get("dependencies", {}).items():
+            assert settings.get("package", dependency) != "swig", "program leaked into SDK dependencies"
+            assert "git" not in settings and "path" not in settings
+        assert manifest["dependencies"]["swig-interface"]["version"] == "=4.0.0"
+        tar.extractall(root / "archives", filter="data")
 
     consumer = root / "consumer"
     (consumer / "src").mkdir(parents=True)
@@ -69,13 +76,12 @@ with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory
     subprocess.run(["cargo", "check", *overrides], cwd=consumer, env=env, check=True)
     tree = subprocess.check_output(
         ["cargo", "tree", "--edges", "normal,build", "--prefix", "none", *overrides],
-        cwd=consumer,
-        env=env,
-        text=True,
+        cwd=consumer, env=env, text=True,
     )
     excluded = ("swig v", "shank v", "shank_idl v", "shank_macro v")
     assert not any(line.startswith(excluded) for line in tree.splitlines())
     print(
-        "Both archives and the external consumer passed; "
-        "protocol dependencies used local release candidates."
+        "SDK archive and external consumer passed against "
+        + ("local dependency candidates (not a registry check)." if args.local_dependencies
+           else "released crates.io dependencies.")
     )

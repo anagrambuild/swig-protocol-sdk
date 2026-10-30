@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-default-members = ["sdk", "interface"]
-members = ["sdk", "interface"]
+default-members = ["sdk"]
+members = ["sdk"]
 
 [workspace.package]
 version = "3.0.0"

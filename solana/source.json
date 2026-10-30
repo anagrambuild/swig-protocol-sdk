@@ -13,17 +13,16 @@
     "repository": "https://github.com/anagrambuild/swig-wallet",
     "revision": "c5edad67f82958f7fb282634ad91c752602e76ca",
     "paths": {
-      "rust-sdk": "rust/sdk",
-      "interface": "rust/interface",
-      "program/idl.json": "rust/interface/tests/data/program-idl.json"
+      "rust-sdk": "rust/sdk"
     },
     "protocol_dependencies": [
-      "swig-state",
-      "swig-compact-instructions"
+      "swig-interface",
+      "swig-state"
     ],
     "test_dependencies": [
       "swig"
-    ]
+    ],
+    "dependency_revision": "f80f383465934be966912fe04ce9c1a9f8aabd56"
   },
-  "scope": "Source import preserving SDK builders. Rust protocol dependencies and program compatibility tests remain pinned to swig-wallet; the program is not a production SDK dependency. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
+  "scope": "Source import preserving SDK builders. Rust protocol crates are consumed from swig-wallet; only swig-sdk is published here. Program fixtures remain pinned for compatibility tests. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
 }
