@@ -53,10 +53,10 @@ jobs:
           cargo install cargo-build-sbf --version 4.0.0 --locked --force
       - name: Build pinned program fixtures
         run: python3 ../scripts/build-test-programs.py --program-repo "$RUNNER_TEMP/swig-wallet"
-      - name: Test ABI parity and SDK behavior
+      - name: Test SDK behavior and authorization-lock ABI parity
         run: cargo test --workspace --locked --features rust_sdk_test
-      - name: Verify published archives and external consumer
-        run: python3 ../scripts/check-rust-packages.py --program-repo "$RUNNER_TEMP/swig-wallet"
+      - name: Verify SDK archive against shared dependency candidates
+        run: python3 ../scripts/check-rust-packages.py --local-dependencies
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -74,17 +74,18 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y libudev-dev
-      # swig-interface needs its initial owner-authenticated publish before
-      # configuring this workflow as its trusted publisher. swig-sdk already exists.
+      # Shared protocol crates, including swig-interface, are published by swig-wallet.
+      - name: Verify SDK archive against released crates
+        run: python3 ../scripts/check-rust-packages.py
       - uses: rust-lang/crates-io-auth-action@v1
         id: auth
       # New releases require a workspace version bump and matching dependency versions.
-      - name: Publish unpublished interface and SDK versions
+      - name: Publish unpublished SDK version
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
         run: |
           version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"])')
-          for crate in swig-interface swig-sdk; do
+          for crate in swig-sdk; do
             if cargo info "$crate@$version" --registry crates-io >/dev/null 2>&1; then
               echo "$crate@$version is already published"
             else
