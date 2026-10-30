@@ -3606,11 +3606,10 @@ checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
 
 [[package]]
 name = "libredox"
-version = "0.1.3"
+version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0ff37bd590ca25063e35af745c343cb7a0271906fb7b37e4813e8f79f00268d"
+checksum = "61ff90caf6077a803a240f62fdbe88645a890bbca49ef8174c3cb0404362171d"
 dependencies = [
- "bitflags",
  "libc",
 ]
 
@@ -3900,16 +3899,6 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "memoffset",
-]
-
-[[package]]
-name = "no-padding"
-version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=c5edad67f82958f7fb282634ad91c752602e76ca#c5edad67f82958f7fb282634ad91c752602e76ca"
-dependencies = [
- "proc-macro2 1.0.106",
- "quote 1.0.45",
- "syn 2.0.117",
 ]
 
 [[package]]
@@ -4314,9 +4303,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pinocchio"
-version = "0.8.1"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "530596fa307103e53257f2cf064815919ee7fbc4c7ab999f6f13cc7067c3aff1"
+checksum = "7c33b58567c11b07749cefbb8320ac023f3387c57807aeb8e3b1262501b6e9f0"
 
 [[package]]
 name = "pinocchio"
@@ -4331,7 +4320,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c6b20fcebc172c3cd3f54114b0241b48fa8e30893ced2eb4927aaba5e3a0ba5"
 dependencies = [
  "five8_const 0.1.4",
- "pinocchio 0.8.1",
+ "pinocchio 0.8.4",
 ]
 
 [[package]]
@@ -4361,7 +4350,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d037f645db5ed4df9163362f1716932feb987a82f70caf15d0259cfeef82f4c"
 dependencies = [
- "pinocchio 0.8.1",
+ "pinocchio 0.8.4",
  "pinocchio-pubkey 0.2.4",
 ]
 
@@ -5502,17 +5491,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "shank"
-version = "0.4.2"
-source = "git+https://github.com/anagrambuild/shank.git#d4f046b22b87c896fdb77e55256d74dad6a13a68"
-dependencies = [
- "shank_macro",
-]
-
-[[package]]
 name = "shank_idl"
 version = "0.4.2"
-source = "git+https://github.com/anagrambuild/shank.git#d4f046b22b87c896fdb77e55256d74dad6a13a68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b2d15f5074691d1cd7987376ffbb85bd3fd3a5a5bdd68284e0c120968cdd554"
 dependencies = [
  "anyhow",
  "cargo_toml",
@@ -5524,37 +5506,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "shank_macro"
-version = "0.4.2"
-source = "git+https://github.com/anagrambuild/shank.git#d4f046b22b87c896fdb77e55256d74dad6a13a68"
-dependencies = [
- "proc-macro2 1.0.106",
- "quote 1.0.45",
- "shank_macro_impl",
- "shank_render",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "shank_macro_impl"
 version = "0.4.2"
-source = "git+https://github.com/anagrambuild/shank.git#d4f046b22b87c896fdb77e55256d74dad6a13a68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93d0593f48acb0a722906416b1f6b8926f6571eb9af16d566a7c65427f269f50"
 dependencies = [
  "anyhow",
  "proc-macro2 1.0.106",
  "quote 1.0.45",
  "serde",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "shank_render"
-version = "0.4.2"
-source = "git+https://github.com/anagrambuild/shank.git#d4f046b22b87c896fdb77e55256d74dad6a13a68"
-dependencies = [
- "proc-macro2 1.0.106",
- "quote 1.0.45",
- "shank_macro_impl",
 ]
 
 [[package]]
@@ -8666,42 +8627,32 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "swig"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=c5edad67f82958f7fb282634ad91c752602e76ca#c5edad67f82958f7fb282634ad91c752602e76ca"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9#869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
 dependencies = [
  "anyhow",
  "bs58",
  "bytemuck",
  "default-env",
- "no-padding",
  "num_enum",
  "pinocchio 0.9.0",
  "pinocchio-pubkey 0.3.0",
  "pinocchio-system",
  "pinocchio-token",
- "shank",
  "shank_idl",
  "solana-security-txt",
  "solana-sha256-hasher",
  "static_assertions",
- "swig-assertions 3.0.0",
- "swig-compact-instructions 3.0.0",
- "swig-state 3.0.0",
+ "swig-assertions",
+ "swig-compact-instructions",
+ "swig-no-padding",
+ "swig-shank-macro",
+ "swig-state",
 ]
 
 [[package]]
 name = "swig-assertions"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=c5edad67f82958f7fb282634ad91c752602e76ca#c5edad67f82958f7fb282634ad91c752602e76ca"
-dependencies = [
- "pinocchio 0.9.0",
- "pinocchio-pubkey 0.3.0",
- "pinocchio-system",
-]
-
-[[package]]
-name = "swig-assertions"
-version = "4.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=f80f383465934be966912fe04ce9c1a9f8aabd56#f80f383465934be966912fe04ce9c1a9f8aabd56"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9#869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
 dependencies = [
  "pinocchio 0.9.0",
  "pinocchio-pubkey 0.3.0",
@@ -8711,17 +8662,7 @@ dependencies = [
 [[package]]
 name = "swig-compact-instructions"
 version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=c5edad67f82958f7fb282634ad91c752602e76ca#c5edad67f82958f7fb282634ad91c752602e76ca"
-dependencies = [
- "bs58",
- "pinocchio 0.9.0",
- "pinocchio-system",
-]
-
-[[package]]
-name = "swig-compact-instructions"
-version = "4.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=f80f383465934be966912fe04ce9c1a9f8aabd56#f80f383465934be966912fe04ce9c1a9f8aabd56"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9#869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
 dependencies = [
  "bs58",
  "pinocchio 0.9.0",
@@ -8731,24 +8672,24 @@ dependencies = [
 
 [[package]]
 name = "swig-interface"
-version = "4.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=f80f383465934be966912fe04ce9c1a9f8aabd56#f80f383465934be966912fe04ce9c1a9f8aabd56"
+version = "3.0.0"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9#869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
 dependencies = [
  "anyhow",
  "bytemuck",
- "pinocchio 0.9.0",
  "solana-sdk",
  "solana-secp256r1-program",
  "solana-system-interface 3.2.0",
- "swig-compact-instructions 4.0.0",
- "swig-state 4.0.0",
+ "swig",
+ "swig-compact-instructions",
+ "swig-state",
  "thiserror 2.0.20",
 ]
 
 [[package]]
 name = "swig-no-padding"
-version = "4.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=f80f383465934be966912fe04ce9c1a9f8aabd56#f80f383465934be966912fe04ce9c1a9f8aabd56"
+version = "3.0.0"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9#869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
 dependencies = [
  "proc-macro2 1.0.106",
  "quote 1.0.45",
@@ -8782,33 +8723,38 @@ dependencies = [
  "solana-system-interface 3.2.0",
  "spl-associated-token-account",
  "spl-token",
- "swig",
  "swig-interface",
- "swig-state 3.0.0",
- "swig-state 4.0.0",
+ "swig-state",
  "test-log",
  "thiserror 2.0.20",
 ]
 
 [[package]]
-name = "swig-state"
-version = "3.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=c5edad67f82958f7fb282634ad91c752602e76ca#c5edad67f82958f7fb282634ad91c752602e76ca"
+name = "swig-shank-macro"
+version = "0.4.2"
+source = "git+https://github.com/anagrambuild/shank.git?rev=87bd89c69f8ade77535dca18d838389b1140a9f7#87bd89c69f8ade77535dca18d838389b1140a9f7"
 dependencies = [
- "libsecp256k1",
- "murmur3",
- "no-padding",
- "p256",
- "pinocchio 0.9.0",
- "pinocchio-pubkey 0.3.0",
- "solana-curve25519 3.1.11",
- "swig-assertions 3.0.0",
+ "proc-macro2 1.0.106",
+ "quote 1.0.45",
+ "shank_macro_impl",
+ "swig-shank-render",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "swig-shank-render"
+version = "0.4.2"
+source = "git+https://github.com/anagrambuild/shank.git?rev=87bd89c69f8ade77535dca18d838389b1140a9f7#87bd89c69f8ade77535dca18d838389b1140a9f7"
+dependencies = [
+ "proc-macro2 1.0.106",
+ "quote 1.0.45",
+ "shank_macro_impl",
 ]
 
 [[package]]
 name = "swig-state"
-version = "4.0.0"
-source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=f80f383465934be966912fe04ce9c1a9f8aabd56#f80f383465934be966912fe04ce9c1a9f8aabd56"
+version = "3.0.0"
+source = "git+https://github.com/anagrambuild/swig-wallet.git?rev=869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9#869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
 dependencies = [
  "libsecp256k1",
  "murmur3",
@@ -8816,7 +8762,7 @@ dependencies = [
  "pinocchio 0.9.0",
  "pinocchio-pubkey 0.3.0",
  "solana-curve25519 3.1.11",
- "swig-assertions 4.0.0",
+ "swig-assertions",
  "swig-no-padding",
 ]
 
@@ -9340,9 +9286,9 @@ checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
 
 [[package]]
 name = "unicode-segmentation"
-version = "1.12.0"
+version = "1.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
+checksum = "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
 
 [[package]]
 name = "unicode-width"

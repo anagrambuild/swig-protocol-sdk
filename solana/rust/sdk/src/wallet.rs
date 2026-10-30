@@ -20,14 +20,12 @@ use solana_sdk::{
     transaction::{Transaction, VersionedTransaction},
 };
 use spl_associated_token_account::{
-    get_associated_token_address, get_associated_token_address_with_program_id,
-    instruction::create_associated_token_account,
+    get_associated_token_address, instruction::create_associated_token_account,
 };
 use spl_token::ID as TOKEN_PROGRAM_ID;
 use swig_state::{
     action::{
-        all::All, manage_authority::ManageAuthority,
-        manage_authorization_locks::ManageAuthorizationLocks, program_scope::ProgramScope,
+        all::All, manage_authority::ManageAuthority, program_scope::ProgramScope,
         sol_destination_limit::SolDestinationLimit, sol_limit::SolLimit,
         sol_recurring_destination_limit::SolRecurringDestinationLimit,
         sol_recurring_limit::SolRecurringLimit, sub_account::SubAccount,
@@ -42,10 +40,7 @@ use swig_state::{
         sub_account_seeds, sub_account_v2_asset_seeds, sub_account_v2_state_seeds, Swig,
         SwigWithRoles,
     },
-    tail::{
-        authorization_locks::{self, AuthorizationLock},
-        rent_claimer,
-    },
+    tail::rent_claimer,
     Transmutable,
 };
 const TOKEN_22_PROGRAM_ID: Pubkey = pubkey!("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
@@ -1164,15 +1159,6 @@ impl<'c> SwigWallet<'c> {
                     println!("║ │  ├─ Manage Authority");
                 }
 
-                if let Some(action) = Role::get_action::<ManageAuthorizationLocks>(&role, &[])
-                    .map_err(|_| SwigError::AuthorityNotFound)?
-                {
-                    println!(
-                        "║ │  ├─ Manage Authorization Locks: up to {} slots",
-                        action.max_duration_slots
-                    );
-                }
-
                 // Check Sol Limit
                 if let Some(action) = Role::get_action::<SolLimit>(&role, &[])
                     .map_err(|_| SwigError::AuthorityNotFound)?
@@ -1372,38 +1358,6 @@ impl<'c> SwigWallet<'c> {
                 }
 
                 println!("║ │  ");
-            }
-        }
-
-        let locks = self.get_authorization_locks()?;
-        if !locks.is_empty() {
-            let slot = self.get_current_slot()?;
-            println!("╠══════════════════════════════════════════════════════════════════");
-            println!("║ AUTHORIZATION LOCKS");
-            println!("╠══════════════════════════════════════════════════════════════════");
-            for lock in locks {
-                println!("║ Lock ID: {}", lock.lock_id);
-                if lock.is_native_sol() {
-                    println!("║ ├─ Asset: SOL");
-                    println!("║ ├─ Amount: {} SOL", lock.amount as f64 / 1_000_000_000.0);
-                } else {
-                    println!("║ ├─ Mint: {}", Pubkey::new_from_array(lock.mint));
-                    println!(
-                        "║ ├─ Token Account: {}",
-                        Pubkey::new_from_array(lock.asset_account)
-                    );
-                    println!("║ ├─ Amount: {} tokens", lock.amount);
-                }
-                println!("║ ├─ Role ID: {}", lock.role_id);
-                println!(
-                    "║ └─ Expiry: Slot {} ({})",
-                    lock.expiry_slot,
-                    if lock.is_active(slot) {
-                        "active"
-                    } else {
-                        "expired"
-                    }
-                );
             }
         }
 
@@ -1632,142 +1586,6 @@ impl<'c> SwigWallet<'c> {
             &[self.fee_payer.insecure_clone()],
         )?;
 
-        let tx_result = self.send_and_confirm_transaction(tx);
-        if tx_result.is_ok() {
-            self.instruction_builder.increment_odometer()?;
-        }
-        tx_result
-    }
-
-    /// Reserves `amount` of `asset_account` until `expiry_slot`.
-    ///
-    /// For native SOL pass the swig wallet address and an all-zero mint; for
-    /// tokens pass a token account owned by the swig wallet address and its
-    /// mint. While the lock is active no role can spend the account below the
-    /// reserved amount; only this role can release it early.
-    pub fn add_authorization_lock(
-        &mut self,
-        asset_account: Pubkey,
-        mint: [u8; 32],
-        amount: u64,
-        expiry_slot: u64,
-    ) -> Result<Signature, SwigError> {
-        let current_slot = self.get_current_slot()?;
-        let instructions = self.instruction_builder.add_authorization_lock(
-            asset_account,
-            mint,
-            amount,
-            expiry_slot,
-            Some(current_slot),
-        )?;
-        self.send_authority_instructions(instructions)
-    }
-
-    /// Reserves `amount` lamports of the wallet's SOL balance until
-    /// `expiry_slot`.
-    pub fn add_sol_authorization_lock(
-        &mut self,
-        amount: u64,
-        expiry_slot: u64,
-    ) -> Result<Signature, SwigError> {
-        let wallet_address = self.get_swig_wallet_address()?;
-        self.add_authorization_lock(
-            wallet_address,
-            authorization_locks::NATIVE_SOL_MINT,
-            amount,
-            expiry_slot,
-        )
-    }
-
-    /// Reserves `amount` of the wallet's associated token account for `mint`
-    /// until `expiry_slot`. Works for both SPL Token and Token-2022 mints.
-    pub fn add_token_authorization_lock(
-        &mut self,
-        mint: &Pubkey,
-        amount: u64,
-        expiry_slot: u64,
-    ) -> Result<Signature, SwigError> {
-        let token_program = self.get_account_owner(mint)?;
-        let wallet_address = self.get_swig_wallet_address()?;
-        let token_account =
-            get_associated_token_address_with_program_id(&wallet_address, mint, &token_program);
-        self.add_authorization_lock(token_account, mint.to_bytes(), amount, expiry_slot)
-    }
-
-    /// Releases an authorization lock created by the current role, or prunes
-    /// an expired lock.
-    pub fn remove_authorization_lock(&mut self, lock_id: u32) -> Result<Signature, SwigError> {
-        let swig_data = self.get_swig_account_data()?;
-        let parts = Swig::split_parts(&swig_data).map_err(|_| SwigError::InvalidSwigData)?;
-        let rent_claimer = rent_claimer::read_strict(parts.tail)
-            .map_err(|_| SwigError::InvalidSwigData)?
-            .map(|key| Pubkey::new_from_array(*key));
-        let current_slot = self.get_current_slot()?;
-        let instructions = self.instruction_builder.remove_authorization_lock(
-            lock_id,
-            rent_claimer,
-            Some(current_slot),
-        )?;
-        self.send_authority_instructions(instructions)
-    }
-
-    /// Returns every stored authorization lock, including expired ones.
-    pub fn get_authorization_locks(&self) -> Result<Vec<AuthorizationLock>, SwigError> {
-        let swig_data = self.get_swig_account_data()?;
-        let parts = Swig::split_parts(&swig_data).map_err(|_| SwigError::InvalidSwigData)?;
-        Ok(authorization_locks::read_strict(parts.tail)
-            .map_err(|_| SwigError::InvalidSwigData)?
-            .map(|entry| entry.iter().collect())
-            .unwrap_or_default())
-    }
-
-    /// Returns the authorization locks that still bind at the current slot.
-    pub fn get_active_authorization_locks(&self) -> Result<Vec<AuthorizationLock>, SwigError> {
-        let slot = self.get_current_slot()?;
-        Ok(self
-            .get_authorization_locks()?
-            .into_iter()
-            .filter(|lock| lock.is_active(slot))
-            .collect())
-    }
-
-    fn get_account_owner(&self, address: &Pubkey) -> Result<Pubkey, SwigError> {
-        #[cfg(not(all(feature = "rust_sdk_test", test)))]
-        let owner = self.rpc_client.get_account(address)?.owner;
-        #[cfg(all(feature = "rust_sdk_test", test))]
-        let owner = self
-            .litesvm
-            .get_account(address)
-            .ok_or_else(|| SwigError::InterfaceError(format!("account {address} not found")))?
-            .owner;
-        Ok(owner)
-    }
-
-    fn get_swig_account_data(&self) -> Result<Vec<u8>, SwigError> {
-        let swig_pubkey = self.get_swig_account()?;
-        #[cfg(not(all(feature = "rust_sdk_test", test)))]
-        let swig_data = self.rpc_client.get_account_data(&swig_pubkey)?;
-        #[cfg(all(feature = "rust_sdk_test", test))]
-        let swig_data = self
-            .litesvm
-            .get_account(&swig_pubkey)
-            .ok_or(SwigError::InvalidSwigData)?
-            .data;
-        Ok(swig_data)
-    }
-
-    fn send_authority_instructions(
-        &mut self,
-        instructions: Vec<Instruction>,
-    ) -> Result<Signature, SwigError> {
-        let msg = v0::Message::try_compile(
-            &self.fee_payer.pubkey(),
-            &instructions,
-            &[],
-            self.get_current_blockhash()?,
-        )?;
-        let keypairs = self.get_keypairs()?;
-        let tx = VersionedTransaction::try_new(VersionedMessage::V0(msg), &keypairs)?;
         let tx_result = self.send_and_confirm_transaction(tx);
         if tx_result.is_ok() {
             self.instruction_builder.increment_odometer()?;
