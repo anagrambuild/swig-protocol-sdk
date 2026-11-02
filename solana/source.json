@@ -22,7 +22,7 @@
     "test_dependencies": [
       "swig"
     ],
-    "dependency_revision": "f80f383465934be966912fe04ce9c1a9f8aabd56"
+    "dependency_revision": "869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
   },
-  "scope": "Source import preserving SDK builders. Rust protocol crates are consumed from swig-wallet; only swig-sdk is published here. Program fixtures remain pinned for compatibility tests. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
+  "scope": "Rust SDK uses the canonical swig-wallet interface and program types; only swig-sdk is published here. Rust authorization-lock support is deferred. Rust fixtures use dependency_revision; TypeScript fixtures retain the original revision. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
 }

@@ -9,9 +9,11 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--program-repo", type=Path, required=True)
+parser.add_argument("--rust-only", action="store_true", help="Build the Rust dependency revision without replacing TypeScript fixtures.")
 args = parser.parse_args()
 solana = Path(__file__).resolve().parents[1]
-revision = json.loads((solana / "source.json").read_text())["rust"]["revision"]
+source = json.loads((solana / "source.json").read_text())["rust"]
+revision = source["dependency_revision"] if args.rust_only else source["revision"]
 
 with tempfile.TemporaryDirectory(prefix="swig-solana-fixtures-") as directory:
     root = Path(directory)
@@ -55,7 +57,10 @@ with tempfile.TemporaryDirectory(prefix="swig-solana-fixtures-") as directory:
         name: (root / "artifacts" / name).read_bytes()
         for name in ["swig.so", "test_program_authority.so"]
     }
-    for destination in [solana / "typescript", solana / "rust/target/deploy"]:
+    destinations = [solana / "rust/target/deploy"]
+    if not args.rust_only:
+        destinations.insert(0, solana / "typescript")
+    for destination in destinations:
         destination.mkdir(parents=True, exist_ok=True)
         for name, binary in artifacts.items():
             path = destination / name

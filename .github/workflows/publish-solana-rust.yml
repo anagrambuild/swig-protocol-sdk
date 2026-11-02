@@ -41,7 +41,7 @@ jobs:
       - run: cargo clippy --workspace --all-targets --locked
       - name: Fetch the pinned program for compatibility tests
         run: |
-          revision=$(python3 -c 'import json; print(json.load(open("../source.json"))["rust"]["revision"])')
+          revision=$(python3 -c 'import json; print(json.load(open("../source.json"))["rust"]["dependency_revision"])')
           git init "$RUNNER_TEMP/swig-wallet"
           git -C "$RUNNER_TEMP/swig-wallet" remote add origin https://github.com/anagrambuild/swig-wallet.git
           git -C "$RUNNER_TEMP/swig-wallet" fetch --depth=1 origin "$revision"
@@ -52,8 +52,8 @@ jobs:
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
           cargo install cargo-build-sbf --version 4.0.0 --locked --force
       - name: Build pinned program fixtures
-        run: python3 ../scripts/build-test-programs.py --program-repo "$RUNNER_TEMP/swig-wallet"
-      - name: Test SDK behavior and authorization-lock ABI parity
+        run: python3 ../scripts/build-test-programs.py --program-repo "$RUNNER_TEMP/swig-wallet" --rust-only
+      - name: Test SDK behavior against the shared program
         run: cargo test --workspace --locked --features rust_sdk_test
       - name: Verify SDK archive against shared dependency candidates
         run: python3 ../scripts/check-rust-packages.py --local-dependencies

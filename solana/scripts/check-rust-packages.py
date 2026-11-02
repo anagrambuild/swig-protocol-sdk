@@ -35,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory
         revision = json.loads((rust.parent / "source.json").read_text())["rust"]["dependency_revision"]
         for name in [
             "swig-no-padding", "swig-assertions", "swig-compact-instructions",
-            "swig-state", "swig-interface",
+            "swig-state", "swig", "swig-interface",
         ]:
             candidates = [
                 package for package in metadata["packages"]
@@ -44,6 +44,13 @@ with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory
             ]
             if len(candidates) != 1:
                 raise RuntimeError(f"Expected one {name} from swig-wallet@{revision}")
+            path = Path(candidates[0]["manifest_path"]).parent
+            overrides.extend(["--config", f'patch.crates-io.{name}.path="{path}"'])
+
+        for name in ["swig-shank-render", "swig-shank-macro"]:
+            candidates = [package for package in metadata["packages"] if package["name"] == name]
+            if len(candidates) != 1:
+                raise RuntimeError(f"Expected one pinned {name} candidate")
             path = Path(candidates[0]["manifest_path"]).parent
             overrides.extend(["--config", f'patch.crates-io.{name}.path="{path}"'])
 
@@ -59,9 +66,8 @@ with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory
         manifest_file = tar.extractfile(prefix + "Cargo.toml")
         manifest = tomllib.loads(manifest_file.read().decode())
         for dependency, settings in manifest.get("dependencies", {}).items():
-            assert settings.get("package", dependency) != "swig", "program leaked into SDK dependencies"
             assert "git" not in settings and "path" not in settings
-        assert manifest["dependencies"]["swig-interface"]["version"] == "=4.0.0"
+        assert manifest["dependencies"]["swig-interface"]["version"] == "=3.0.0"
         tar.extractall(root / "archives", filter="data")
 
     consumer = root / "consumer"
@@ -78,8 +84,13 @@ with tempfile.TemporaryDirectory(prefix="swig-rust-package-check-") as directory
         ["cargo", "tree", "--edges", "normal,build", "--prefix", "none", *overrides],
         cwd=consumer, env=env, text=True,
     )
-    excluded = ("swig v", "shank v", "shank_idl v", "shank_macro v")
-    assert not any(line.startswith(excluded) for line in tree.splitlines())
+    assert any(line.startswith("swig v3.0.0") for line in tree.splitlines())
+    assert any(line.startswith("swig-interface v3.0.0") for line in tree.splitlines())
+    if not args.local_dependencies:
+        metadata = json.loads(subprocess.check_output(
+            ["cargo", "metadata", "--format-version", "1"], cwd=consumer, env=env, text=True,
+        ))
+        assert all(not (package["source"] or "").startswith("git+") for package in metadata["packages"])
     print(
         "SDK archive and external consumer passed against "
         + ("local dependency candidates (not a registry check)." if args.local_dependencies
