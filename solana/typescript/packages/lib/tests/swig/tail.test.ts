@@ -14,11 +14,14 @@ import {
   decodeSwigTail,
   findSwigPdaRaw,
   getActiveAuthorizationLocks,
+  getAuthorizationLockAvailableAmount,
+  getAuthorizationLockReservedAmount,
   getCreateSwigInstructionContext,
   getSwigAuthorizationLocks,
   getSwigCodec,
   getSwigTail,
   isAuthorizationLockActive,
+  isAuthorizationLockPrunable,
   isNativeSolAuthorizationLock,
   SolPublicKey,
   Swig,
@@ -136,6 +139,105 @@ describe('swig tail', () => {
     expect(isAuthorizationLockActive(decoded.locks[1], 200n)).toBe(false);
   });
 
+  test('decodes fully captured locks with amount 0 as inactive and prunable', () => {
+    const captured = lock({
+      asset: 4,
+      mint: 0,
+      amount: 0n,
+      expirySlot: 1_000n,
+      roleId: 1,
+      lockId: 3,
+    });
+    const tail = entry(3, 1, [4, 0, 0, 0], concat(solLock, captured));
+    const decoded = decodeAuthorizationLocks(tail);
+
+    expect(decoded.nextLockId).toBe(4);
+    expect(decoded.locks.map((l) => [l.lockId, l.amount])).toEqual([
+      [0, 1_000n],
+      [3, 0n],
+    ]);
+    expect(isAuthorizationLockActive(decoded.locks[1], 10n)).toBe(false);
+    expect(isAuthorizationLockPrunable(decoded.locks[1], 10n)).toBe(true);
+    expect(isAuthorizationLockActive(decoded.locks[0], 10n)).toBe(true);
+    expect(isAuthorizationLockPrunable(decoded.locks[0], 10n)).toBe(false);
+    expect(isAuthorizationLockPrunable(decoded.locks[0], 100n)).toBe(true);
+    expect(
+      getActiveAuthorizationLocks(decoded, 10n).map((l) => l.lockId),
+    ).toEqual([0]);
+  });
+
+  test('available amount excludes only active locks held by other roles', () => {
+    const wallet = new SolPublicKey(new Uint8Array(32).fill(4));
+    const locks = [
+      // role 0 holds 1_000 on the wallet until slot 100
+      ...decodeAuthorizationLocks(mixedTail).locks,
+      // role 1 holds 300 on the wallet
+      decodeAuthorizationLocks(
+        entry(
+          3,
+          1,
+          [6, 0, 0, 0],
+          lock({
+            asset: 4,
+            mint: 0,
+            amount: 300n,
+            expirySlot: 500n,
+            roleId: 1,
+            lockId: 5,
+          }),
+        ),
+      ).locks[0],
+      // role 2's lock is fully captured
+      decodeAuthorizationLocks(
+        entry(
+          3,
+          1,
+          [7, 0, 0, 0],
+          lock({
+            asset: 4,
+            mint: 0,
+            amount: 0n,
+            expirySlot: 500n,
+            roleId: 2,
+            lockId: 6,
+          }),
+        ),
+      ).locks[0],
+    ];
+
+    expect(getAuthorizationLockReservedAmount(locks, wallet, 0, 10n)).toBe(
+      300n,
+    );
+    expect(getAuthorizationLockReservedAmount(locks, wallet, 1, 10n)).toBe(
+      1_000n,
+    );
+    expect(getAuthorizationLockReservedAmount(locks, wallet, 3, 10n)).toBe(
+      1_300n,
+    );
+    // role 0's lock has expired
+    expect(getAuthorizationLockReservedAmount(locks, wallet, 3, 100n)).toBe(
+      300n,
+    );
+    expect(
+      getAuthorizationLockAvailableAmount({
+        balance: 2_000n,
+        locks,
+        assetAccount: wallet,
+        roleId: 0,
+        currentSlot: 10n,
+      }),
+    ).toBe(1_700n);
+    expect(
+      getAuthorizationLockAvailableAmount({
+        balance: 1_000n,
+        locks,
+        assetAccount: wallet,
+        roleId: 3,
+        currentSlot: 10n,
+      }),
+    ).toBe(0n);
+  });
+
   test('returns no locks when the tail has no lock entry', () => {
     expect(decodeAuthorizationLocks(new Uint8Array(0))).toEqual({
       nextLockId: 0,
@@ -174,16 +276,7 @@ describe('swig tail', () => {
   });
 
   test('rejects lock records the on-chain validator rejects', () => {
-    const zeroAmount = lock({
-      asset: 4,
-      mint: 0,
-      amount: 0n,
-      expirySlot: 100n,
-      roleId: 0,
-      lockId: 0,
-    });
     const cases: Array<[string, Uint8Array, string]> = [
-      ['zero amount', entry(3, 1, [1, 0, 0, 0], zeroAmount), 'record'],
       [
         'duplicate ids',
         entry(3, 1, [3, 0, 0, 0], concat(solLock, solLock)),

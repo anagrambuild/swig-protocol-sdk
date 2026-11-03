@@ -139,8 +139,10 @@ export class Actions {
   }
 
   /**
-   * Check if the actions may prune another role's expired authorization lock
-   * (`All`, `AllButManageAuthority`, `ManageAuthority` or `ManageAuthorizationLocks`).
+   * Check if the actions may prune another role's inactive authorization
+   * lock, i.e. one that has expired or been captured to zero (`All`,
+   * `AllButManageAuthority`, `ManageAuthority` or `ManageAuthorizationLocks`).
+   * Use {@link isAuthorizationLockPrunable} to check the lock itself.
    * @returns boolean
    */
   canPruneAuthorizationLocks(): boolean {
@@ -383,7 +385,8 @@ class Action {
   }
 
   /**
-   * Check if this action may prune another role's expired authorization lock
+   * Check if this action may prune another role's inactive (expired or fully
+   * captured) authorization lock
    * @returns `boolean`
    */
   canPruneAuthorizationLocks() {
