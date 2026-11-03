@@ -17,48 +17,13 @@ dependencies. They are not published from this repository.
 
 ## Reservation addresses
 
-Reserve a wallet locally from a direct Ed25519, secp256k1, or P-256 public key,
-then activate it with an external payer. Both languages use the canonical
-`ReservationV1` package from `swig-wallet`.
+Derive a wallet address locally, then activate it later with an external payer.
+TypeScript and Rust expose `ReservationV1` for direct Ed25519, secp256k1, and
+P-256 owners. See the [reservation guide](https://build.onswig.com/solana/reservation-addresses)
+for examples, storage, restoration, and activation requirements.
 
-```typescript
-import { type PublicKey } from '@solana/web3.js';
-import {
-  AuthorityType,
-  ReservationV1,
-  SWIG_PROGRAM_ADDRESS_STRING,
-} from '@swig-wallet/classic';
-
-export async function reserveWallet(owner: PublicKey) {
-  const reservation = ReservationV1.create({
-    programId: SWIG_PROGRAM_ADDRESS_STRING,
-    authorityType: AuthorityType.Ed25519,
-    publicKey: owner.toBytes(),
-    addressOptions: { accountIndex: 0 },
-  });
-  return {
-    packageBytes: reservation.toBytes(),
-    ...(await reservation.addresses()),
-  };
-}
-```
-
-- Save the exact package bytes and the verified `walletAddress`. Restore with
-  `ReservationV1.fromBytes(bytes, expectedProgramId)` and compare the derived
-  wallet address with your trusted record.
-- Classic and Kit expose `getCreateReservedSwigInstruction({ reservation, payer })`.
-  They build an instruction without RPC or submission. For P-256 owners, include
-  a 600,000-unit compute-budget instruction in the activation transaction.
-- Rust exposes `swig_sdk::reservation::ReservationV1` and
-  `SwigWallet::from_reservation` for activation or opening an existing wallet.
-- Use `swigAddress` to fetch the config and `walletAddress` for deposits. A
-  reservation commitment passed to legacy `findSwigPda` produces a different
-  wallet. Reserved wallets require V2 subaccounts; use Rust for that flow.
-
-Activation requires a program deployment supporting `CreateReservedV1`. These
-APIs are available from source; verify your package and deployment versions.
-See the [reservation guide](https://build.onswig.com/solana/reservation-addresses)
-for storage, restoration, activation, and Rust examples.
+The TypeScript reservation APIs require a source build. Activation requires a
+Swig program deployment supporting `CreateReservedV1`.
 
 ## Build and check
 
@@ -71,8 +36,10 @@ bun run typecheck
 bun run lint
 bun run format
 bun run test:unit
-bun test packages/lib/tests/reservation packages/classic/tests/reservation.test.ts packages/kit/tests/reservation.test.ts
 ```
+
+`test:unit` discovers `*.unit.test.ts` files across all TypeScript packages.
+Name new unit tests this way; no command changes are needed.
 
 From `solana/rust/`:
 
