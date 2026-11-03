@@ -38,9 +38,6 @@ bun run format
 bun run test:unit
 ```
 
-`test:unit` discovers `*.unit.test.ts` files across all TypeScript packages.
-Name new unit tests this way; no command changes are needed.
-
 From `solana/rust/`:
 
 ```bash
