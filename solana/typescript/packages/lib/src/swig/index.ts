@@ -103,7 +103,8 @@ export class Swig {
   }
 
   /**
-   * Authorization locks stored on the swig, including expired ones.
+   * Authorization locks stored on the swig, including expired and fully
+   * captured (amount 0) ones.
    * @returns `{ nextLockId, locks }`
    */
   authorizationLocks() {
@@ -111,7 +112,8 @@ export class Swig {
   }
 
   /**
-   * Authorization locks still enforced at `currentSlot`.
+   * Authorization locks still enforced at `currentSlot`: unexpired and with a
+   * non-zero remaining amount.
    * @param currentSlot Current slot
    */
   activeAuthorizationLocks(currentSlot: bigint) {
@@ -668,7 +670,9 @@ export type AddAuthorizationLockArgs<
  * Creates an `AddAuthorizationLock` instruction context.
  *
  * Requires the role to hold `ManageAuthorizationLocks`, and
- * `expirySlot - currentSlot` must not exceed its `maxDurationSlots`.
+ * `expirySlot - currentSlot` must not exceed its `maxDurationSlots`. Other
+ * roles may not spend the reserved funds; the holder may, which captures the
+ * lock and is charged to its limits at that point.
  */
 export const getAddAuthorizationLockInstructionContext = async <
   T extends SolPublicKeyData = SolPublicKeyData,
@@ -795,8 +799,9 @@ export type RemoveAuthorizationLockArgs<
 /**
  * Creates a `RemoveAuthorizationLock` instruction context.
  *
- * The creating role may release its own lock at any time; once a lock has
- * expired, a role with `All`, `AllButManageAuthority`, `ManageAuthority` or
+ * The creating role may release its own lock at any time to void the rest of
+ * the reservation; once a lock has expired or been captured to zero, a role
+ * with `All`, `AllButManageAuthority`, `ManageAuthority` or
  * `ManageAuthorizationLocks` may prune it.
  */
 export const getRemoveAuthorizationLockInstructionContext = async <
@@ -821,6 +826,7 @@ export const getRemoveAuthorizationLockInstructionContext = async <
     roleId: role.id,
     payer,
     swigAddress: swig.address,
+    swigSystemAddress: await getSwigSystemAddressRaw(swig),
     rentClaimer: rentClaimer ?? undefined,
     lockId: args.lockId,
     options,

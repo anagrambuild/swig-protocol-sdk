@@ -118,7 +118,8 @@ export async function fetchSwig(
 }
 
 /**
- * Fetch the authorization locks stored on a Swig, including expired ones.
+ * Fetch the authorization locks stored on a Swig, including expired and
+ * fully captured (amount 0) ones.
  * @param rpc Rpc
  * @param swigAddress Swig address
  * @param config Commitment config
@@ -134,7 +135,8 @@ export async function fetchSwigAuthorizationLocks(
 }
 
 /**
- * Fetch the authorization locks on a Swig still enforced at `currentSlot`.
+ * Fetch the authorization locks on a Swig still enforced at `currentSlot`:
+ * unexpired and with a non-zero remaining amount.
  * @param rpc Rpc
  * @param swigAddress Swig address
  * @param currentSlot Current slot
