@@ -212,6 +212,7 @@ pub trait ClientRole {
     /// claimer when one is configured.
     ///
     /// Defaults to unsupported; authority types that support locks override this.
+    #[allow(clippy::too_many_arguments)] // Mirrors the canonical instruction accounts and replay inputs.
     fn remove_authorization_lock_instruction(
         &self,
         _swig_account: Pubkey,

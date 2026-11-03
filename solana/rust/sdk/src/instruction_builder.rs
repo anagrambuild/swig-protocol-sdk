@@ -376,7 +376,7 @@ impl SwigInstructionBuilder {
         )
     }
 
-    /// Creates instruction(s) releasing (or pruning, once expired) a lock.
+    /// Creates instruction(s) releasing a lock, or pruning one once expired or fully captured.
     /// Pass the wallet's rent claimer when one is configured.
     pub fn remove_authorization_lock(
         &self,

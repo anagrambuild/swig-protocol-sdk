@@ -86,7 +86,32 @@ fn should_lock_enforce_capture_and_release_sol_through_wallet() {
         )
         .unwrap();
     let overspend = system_instruction::transfer(&wallet_address, &recipient, 2 * LAMPORTS_PER_SOL);
-    assert!(wallet.sign_v2(vec![overspend.clone()], None).is_err());
+    let swig_account = wallet.get_swig_account().unwrap();
+    let before_state = wallet.litesvm().get_account(&swig_account).unwrap().data;
+    let before_balance = wallet
+        .litesvm()
+        .get_account(&wallet_address)
+        .unwrap()
+        .lamports;
+    let before_recipient = wallet.litesvm().get_account(&recipient).unwrap().lamports;
+    let error = wallet.sign_v2(vec![overspend.clone()], None).unwrap_err();
+    assert_program_error(&error, 89); // AuthorizationLockViolated
+    assert_eq!(
+        wallet.litesvm().get_account(&swig_account).unwrap().data,
+        before_state
+    );
+    assert_eq!(
+        wallet
+            .litesvm()
+            .get_account(&wallet_address)
+            .unwrap()
+            .lamports,
+        before_balance
+    );
+    assert_eq!(
+        wallet.litesvm().get_account(&recipient).unwrap().lamports,
+        before_recipient
+    );
 
     wallet
         .switch_authority(
