@@ -15,6 +15,16 @@ revisions and path mappings are in [`source.json`](source.json).
 The Rust crates use the pinned `swig-wallet` revision for their on-chain
 dependencies. They are not published from this repository.
 
+## Reservation addresses
+
+Derive a wallet address locally, then activate it later with an external payer.
+TypeScript and Rust expose `ReservationV1` for direct Ed25519, secp256k1, and
+P-256 owners. See the [reservation guide](https://build.onswig.com/solana/reservation-addresses)
+for examples, storage, restoration, and activation requirements.
+
+The TypeScript reservation APIs require a source build. Activation requires a
+Swig program deployment supporting `CreateReservedV1`.
+
 ## Build and check
 
 From `solana/typescript/`:

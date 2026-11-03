@@ -13,7 +13,7 @@
     "format": "prettier --check packages/",
     "version:packages": "changeset version && bun install --lockfile-only",
     "release": "bun run build:packages && changeset publish",
-    "test:unit": "bun test packages/lib/tests/actions",
+    "test:unit": "bun test .unit.test.ts",
     "test": "nx run-many -t test"
   },
   "workspaces": [

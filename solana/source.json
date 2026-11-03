@@ -2,6 +2,16 @@
   "typescript": {
     "repository": "https://github.com/anagrambuild/swig-ts",
     "revision": "24d05c97ad3d17952602fb9731388eb1d0257b68",
+    "reservation_reference": {
+      "repository": "https://github.com/anagrambuild/swig-wallet",
+      "revision": "869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9",
+      "paths": [
+        "interface/src/reservation.rs",
+        "state/src/reservation.rs",
+        "interface/tests/data/reservation-v1.json",
+        "program/src/actions/create_reserved_v1.rs"
+      ]
+    },
     "paths": {
       "packages/classic": "typescript/packages/classic",
       "packages/kit": "typescript/packages/kit",

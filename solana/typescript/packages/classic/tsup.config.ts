@@ -1,7 +1,7 @@
 import { defineConfig, type Options } from 'tsup';
 
 const commonCfg: Partial<Options> = {
-  splitting: true,
+  splitting: false,
   sourcemap: false,
   clean: true,
   format: ['cjs', 'esm'],

@@ -3,6 +3,7 @@ export * from './actions';
 export * from './authority';
 export * from './consts';
 export * from './instructions';
+export * from './reservation';
 export * from './role';
 export * from './solana';
 export * from './swig';
