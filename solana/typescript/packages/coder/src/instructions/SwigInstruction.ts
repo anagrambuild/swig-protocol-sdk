@@ -23,6 +23,7 @@ export enum SwigInstructionDiscriminator {
   TransferAssetsV1,
   CloseTokenAccountV1,
   CloseSwigV1,
+  CreateReservedV1 = 24,
   AddAuthorizationLockV1 = 25,
   RemoveAuthorizationLockV1 = 26,
 }
@@ -84,6 +85,9 @@ export function identifySwigInstruction(
   }
   if (containsBytes(data, discriminatorEncoder.encode(15), 0)) {
     return SwigInstructionDiscriminator.CloseSwigV1;
+  }
+  if (containsBytes(data, discriminatorEncoder.encode(24), 0)) {
+    return SwigInstructionDiscriminator.CreateReservedV1;
   }
   if (containsBytes(data, discriminatorEncoder.encode(25), 0)) {
     return SwigInstructionDiscriminator.AddAuthorizationLockV1;

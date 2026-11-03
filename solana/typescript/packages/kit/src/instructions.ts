@@ -32,12 +32,22 @@ import {
   type CreateAuthorityInfo,
   type KitInstruction,
   type RemoveAuthorizationLockArgs,
+  type ReservationV1,
   type SigningFn,
   type SwigOptions,
   type UpdateAuthorityActionsInfo,
   type WithdrawSubAccountArgs,
   type WithdrawSubAccountCheckedArgs,
 } from '@swig-wallet/lib';
+
+/** Builds activation; include a 600,000-unit compute budget for P-256 owners. */
+export async function getCreateReservedSwigInstruction(args: {
+  payer: Address;
+  reservation: ReservationV1;
+}): Promise<KitInstruction> {
+  const instruction = await args.reservation.createInstruction(args.payer);
+  return instruction.toKitInstruction();
+}
 
 export async function getCreateSwigInstruction(args: {
   payer: Address;
