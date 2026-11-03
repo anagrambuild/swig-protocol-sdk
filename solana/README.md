@@ -26,7 +26,8 @@ remain readable until pruned.
 
 The published protocol crates at version 3.0.0 do not contain these APIs. Use
 this branch through Git or a local path for review. A registry release needs
-matching protocol dependency releases and an SDK version bump first.
+matching protocol dependency releases and a major SDK version bump first:
+adding a variant to the public `Permission` enum affects exhaustive matches.
 
 CI and `source.json` remain unchanged for this draft. Their Rust fixture pin
 still points to the earlier protocol revision, so the existing Rust compatibility
