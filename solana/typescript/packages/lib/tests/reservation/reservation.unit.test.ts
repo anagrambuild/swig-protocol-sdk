@@ -9,11 +9,13 @@ import {
   identifySwigInstruction,
   SwigInstructionDiscriminator,
 } from '@swig-wallet/coder';
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, expectTypeOf, test } from 'bun:test';
 import { SWIG_PROGRAM_ADDRESS_STRING } from '../../src/consts';
 import {
   ReservationV1,
+  type CreateReservationArgs,
   type ReservationAddressOptions,
+  type ReservationOwnerType,
 } from '../../src/reservation';
 import { findSwigPdaRaw } from '../../src/utils';
 // Canonical swig-wallet interface vectors at 869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9.
@@ -35,6 +37,25 @@ function reserve(addressOptions?: ReservationAddressOptions): ReservationV1 {
 }
 
 describe('reservation V1 cross-language contract', () => {
+  test('accepts only direct signing-key owner types', () => {
+    expectTypeOf<CreateReservationArgs['authorityType']>().toEqualTypeOf<
+      AuthorityType.Ed25519 | AuthorityType.Secp256k1 | AuthorityType.Secp256r1
+    >();
+    for (const authorityType of [
+      AuthorityType.None,
+      AuthorityType.Ed25519Session,
+      AuthorityType.Secp256k1Session,
+      AuthorityType.Secp256r1Session,
+      AuthorityType.ProgramExec,
+      AuthorityType.ProgramExecSession,
+    ] satisfies AuthorityType[]) {
+      expect(() =>
+        // @ts-expect-error unsupported owners must fail at compile time and runtime
+        ReservationV1.create({ programId, authorityType, publicKey }),
+      ).toThrow('requires a direct');
+    }
+  });
+
   for (const vector of vectors) {
     test(`matches Rust package, commitment, addresses and instruction for owner ${vector.authorityType}`, async () => {
       const reservation = ReservationV1.create({
@@ -143,7 +164,10 @@ describe('reservation V1 cross-language contract', () => {
   });
 
   test('normalizes valid SEC1 constructor input but rejects expanded imports', () => {
-    for (const type of [AuthorityType.Secp256k1, AuthorityType.Secp256r1]) {
+    for (const type of [
+      AuthorityType.Secp256k1,
+      AuthorityType.Secp256r1,
+    ] satisfies ReservationOwnerType[]) {
       const curve = type === AuthorityType.Secp256k1 ? secp256k1 : p256;
       const compressed = curve.ProjectivePoint.BASE.toRawBytes(true);
       const expanded = curve.ProjectivePoint.BASE.toRawBytes(false);
@@ -213,7 +237,7 @@ describe('reservation V1 cross-language contract', () => {
     for (const authorityType of [
       AuthorityType.Secp256k1,
       AuthorityType.Secp256r1,
-    ]) {
+    ] satisfies ReservationOwnerType[]) {
       const key = new Uint8Array(33).fill(255);
       key[0] = 2;
       expect(() =>
@@ -237,7 +261,7 @@ describe('reservation V1 cross-language contract', () => {
         publicKey,
         addressOptions: { accountIndex: 1 },
       },
-    ]) {
+    ] satisfies CreateReservationArgs[]) {
       const changed = await ReservationV1.create(args).addresses();
       expect(changed.commitment).not.toEqual(original.commitment);
       expect(changed.walletAddress.toBase58()).not.toBe(

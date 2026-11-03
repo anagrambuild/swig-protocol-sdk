@@ -43,7 +43,7 @@ import {
 /** Builds activation; include a 600,000-unit compute budget for P-256 owners. */
 export async function getCreateReservedSwigInstruction(args: {
   payer: PublicKey;
-  reservation: ReservationV1;
+  reservation: Pick<ReservationV1, 'createInstruction'>;
 }): Promise<TransactionInstruction> {
   const instruction = await args.reservation.createInstruction(args.payer);
   return getTransactionInstructionFromWeb3Instruction(

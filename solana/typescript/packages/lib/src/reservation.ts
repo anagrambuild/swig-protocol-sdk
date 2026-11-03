@@ -24,9 +24,15 @@ export type ReservationAddressOptions =
   | { accountIndex: number; salt?: never }
   | { salt: Uint8Array; accountIndex?: never };
 
+/** Direct signing-key owners supported by reservation V1. */
+export type ReservationOwnerType =
+  | AuthorityType.Ed25519
+  | AuthorityType.Secp256k1
+  | AuthorityType.Secp256r1;
+
 export interface CreateReservationArgs {
   programId: SolPublicKeyData;
-  authorityType: AuthorityType;
+  authorityType: ReservationOwnerType;
   publicKey: Uint8Array;
   addressOptions?: ReservationAddressOptions;
 }
