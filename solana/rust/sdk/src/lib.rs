@@ -14,6 +14,7 @@ pub use client_role::{
 pub use error::SwigError;
 pub use instruction_builder::SwigInstructionBuilder;
 pub use swig_interface::reservation;
+pub use swig_state::tail::authorization_locks::AuthorizationLock;
 pub use swig_state::{authority, swig};
 pub use types::{Permission, RecurringConfig};
 pub use utils::*;
