@@ -12,8 +12,12 @@ parser.add_argument("--program-repo", type=Path, required=True)
 parser.add_argument("--rust-only", action="store_true", help="Build the Rust dependency revision without replacing TypeScript fixtures.")
 args = parser.parse_args()
 solana = Path(__file__).resolve().parents[1]
-source = json.loads((solana / "source.json").read_text())["rust"]
-revision = source["dependency_revision"] if args.rust_only else source["revision"]
+source = json.loads((solana / "source.json").read_text())
+revision = (
+    source["rust"]["dependency_revision"]
+    if args.rust_only
+    else source["typescript"]["program_revision"]
+)
 
 with tempfile.TemporaryDirectory(prefix="swig-solana-fixtures-") as directory:
     root = Path(directory)

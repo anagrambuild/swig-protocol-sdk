@@ -283,6 +283,8 @@ export abstract class Authority {
    * Requires `ManageAuthorizationLocks`, and `expirySlot - currentSlot` may not
    * exceed its `maxDurationSlots`. Roles without `All` or
    * `AllButManageAuthority` may only lock within their own spend limits.
+   * Locking charges no limit: the holder's limits are charged when it spends
+   * the reserved funds, which also captures the lock.
    */
   abstract addAuthorizationLock(args: {
     payer: SolPublicKeyData;
@@ -299,14 +301,17 @@ export abstract class Authority {
   /**
    * Creates a `RemoveAuthorizationLock` instruction.
    *
-   * The creating role may release its own lock at any time. Once a lock has
-   * expired, a role with `All`, `AllButManageAuthority`, `ManageAuthority` or
-   * `ManageAuthorizationLocks` may prune it. Pass `rentClaimer` when the
+   * The creating role may release its own lock at any time to void the rest
+   * of the reservation; it does not need to release a lock to spend it. Once
+   * a lock has expired or been captured to zero, a role with `All`,
+   * `AllButManageAuthority`, `ManageAuthority` or `ManageAuthorizationLocks`
+   * may prune it. Pass `rentClaimer` when the
    * wallet has one configured.
    */
   abstract removeAuthorizationLock(args: {
     payer: SolPublicKeyData;
     swigAddress: SolPublicKeyData;
+    swigSystemAddress: SolPublicKeyData;
     rentClaimer?: SolPublicKeyData;
     lockId: number;
     roleId: number;

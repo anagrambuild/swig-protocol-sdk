@@ -10,7 +10,7 @@ import {
   type SwigAccount,
   type SwigTailHeader,
 } from '@swig-wallet/coder';
-import { SolPublicKey } from '../solana';
+import { SolPublicKey, type SolPublicKeyData } from '../solana';
 
 /** Byte length of the rent claimer tail entry's value. */
 const RENT_CLAIMER_VALUE_LENGTH = 32;
@@ -25,7 +25,7 @@ export type SwigTailEntry = {
   value: Uint8Array;
 };
 
-/** Authorization locks stored on a swig, including expired ones. */
+/** Authorization locks stored on a swig, including expired and fully captured ones. */
 export type SwigAuthorizationLocks = {
   /** Id the next created lock will receive. Ids are never reused. */
   nextLockId: number;
@@ -157,11 +157,7 @@ function validatedTailEntries(tail: Uint8Array): SwigTailEntry[] {
           const lock = decoder.decode(
             value.subarray(offset, offset + AUTHORIZATION_LOCK_LENGTH),
           );
-          if (
-            lock.amount === 0n ||
-            lock.lockId <= previousId ||
-            lock.lockId >= nextLockId
-          ) {
+          if (lock.lockId <= previousId || lock.lockId >= nextLockId) {
             throw new Error('Invalid authorization lock tail record');
           }
           previousId = lock.lockId;
@@ -227,13 +223,15 @@ export function getSwigAuthorizationLocks(
 }
 
 /**
- * A lock is enforced while `currentSlot < expirySlot`.
+ * A lock is enforced while `currentSlot < expirySlot` and it still reserves
+ * a non-zero `amount`. Spending by the holding role captures (lowers) its
+ * locks; a fully captured lock stays stored with amount 0 and is inactive.
  */
 export function isAuthorizationLockActive(
   lock: AuthorizationLock,
   currentSlot: bigint,
 ): boolean {
-  return currentSlot < lock.expirySlot;
+  return lock.amount > 0n && currentSlot < lock.expirySlot;
 }
 
 /**
@@ -248,6 +246,68 @@ export function getActiveAuthorizationLocks(
 ): AuthorizationLock[] {
   const list = Array.isArray(locks) ? locks : locks.locks;
   return list.filter((lock) => isAuthorizationLockActive(lock, currentSlot));
+}
+
+/**
+ * Check if a lock no longer binds anything (expired or captured to zero), so
+ * a role other than its holder with `All`, `AllButManageAuthority`,
+ * `ManageAuthority` or `ManageAuthorizationLocks` may remove it. The holder
+ * may remove its own lock at any time.
+ */
+export function isAuthorizationLockPrunable(
+  lock: AuthorizationLock,
+  currentSlot: bigint,
+): boolean {
+  return !isAuthorizationLockActive(lock, currentSlot);
+}
+
+/**
+ * Sum reserved on `assetAccount` at `currentSlot` by active locks that
+ * `roleId` does not hold. This is what `roleId` must leave in the account.
+ * Locks act like card authorization holds: the holder may spend its own
+ * reserved funds, and that spending captures its locks.
+ * @param locks Locks, or the result of {@link decodeAuthorizationLocks}
+ * @param assetAccount Swig wallet address (native SOL) or token account
+ * @param roleId Spending role
+ * @param currentSlot Current slot
+ */
+export function getAuthorizationLockReservedAmount(
+  locks: AuthorizationLock[] | SwigAuthorizationLocks,
+  assetAccount: SolPublicKeyData,
+  roleId: number,
+  currentSlot: bigint,
+): bigint {
+  const asset = new SolPublicKey(assetAccount).toBytes();
+  return getActiveAuthorizationLocks(locks, currentSlot)
+    .filter(
+      (lock) =>
+        lock.roleId !== roleId &&
+        lock.assetAccount.every((byte, i) => byte === asset[i]),
+    )
+    .reduce((total, lock) => total + lock.amount, 0n);
+}
+
+/**
+ * Amount of `assetAccount` that `roleId` may spend before hitting other
+ * roles' locks: `balance` minus {@link getAuthorizationLockReservedAmount},
+ * never negative. The role's own spend limits still apply.
+ * @param args.balance Token amount, or for native SOL the wallet address's
+ * lamports above the rent-exempt minimum for a 0-byte account
+ */
+export function getAuthorizationLockAvailableAmount(args: {
+  balance: bigint;
+  locks: AuthorizationLock[] | SwigAuthorizationLocks;
+  assetAccount: SolPublicKeyData;
+  roleId: number;
+  currentSlot: bigint;
+}): bigint {
+  const reserved = getAuthorizationLockReservedAmount(
+    args.locks,
+    args.assetAccount,
+    args.roleId,
+    args.currentSlot,
+  );
+  return args.balance > reserved ? args.balance - reserved : 0n;
 }
 
 /**

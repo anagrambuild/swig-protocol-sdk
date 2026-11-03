@@ -23,19 +23,27 @@ export const AUTHORIZATION_LOCK_LENGTH = 88;
 export const NATIVE_SOL_LOCK_MINT: ReadonlyUint8Array = new Uint8Array(32);
 
 /**
- * A reservation of `amount` in `assetAccount` until `expirySlot`, created by
+ * A reservation of `amount` in `assetAccount` until `expirySlot`, held by
  * `roleId`. Stored in the swig config account's authorization-lock tail entry.
+ *
+ * Locks act like card authorization holds: other roles (`All` included) may
+ * not spend the account below the amount reserved by locks they do not hold,
+ * while the holder may spend its reserved funds. That spending captures the
+ * holder's locks by lowering `amount`, and is charged to its limits then.
  */
 export type AuthorizationLock = {
   /** Swig wallet address (native SOL) or a token account it owns. */
   assetAccount: ReadonlyUint8Array;
   /** Token mint, or 32 zero bytes for native SOL. */
   mint: ReadonlyUint8Array;
-  /** Reserved amount in base units. */
+  /**
+   * Amount still reserved, in base units. Falls as the holder spends; a
+   * fully captured lock stays stored with amount 0 and is inactive.
+   */
   amount: bigint;
   /** First slot at which the lock no longer applies. */
   expirySlot: bigint;
-  /** Role that created the lock and may release it early. */
+  /** Role that created and holds the lock; it may spend and release it. */
   roleId: number;
   /** Wallet-unique, never-reused lock identifier. */
   lockId: number;
