@@ -1,5 +1,33 @@
 # @swig-wallet/lib
 
+## 3.0.0
+
+### Major Changes
+
+- 60976da: Add authorization lock support: the `AddAuthorizationLockV1` (25) and `RemoveAuthorizationLockV1` (26) instructions for Ed25519, Secp256k1, Secp256r1, ProgramExec and session authorities, the `ManageAuthorizationLocks` permission (27) with its `maxDurationSlots` data, and a decoder for the locks stored in the swig config account's tail. Kit and classic gain `getAddAuthorizationLockInstructions`, `getAddSolAuthorizationLockInstructions`, `getAddTokenAuthorizationLockInstructions`, `getRemoveAuthorizationLockInstructions`, `fetchSwigAuthorizationLocks` and `fetchActiveSwigAuthorizationLocks`. Locks follow card-authorization semantics: a lock's `amount` is what is still reserved, other roles may not spend below the locks they do not hold, and the holder's spending captures its locks. Fully captured (amount 0) and expired locks are inactive and prunable; `isAuthorizationLockPrunable`, `getAuthorizationLockReservedAmount` and `getAuthorizationLockAvailableAmount` help apply these rules client-side.
+
+  Low-level `removeAuthorizationLock` callers (including `Authority.removeAuthorizationLock`) must now supply `swigSystemAddress`, the derived wallet address. The high-level remove instruction helpers continue to derive it automatically. ProgramExec preinstructions for add/remove must bind that wallet address as their second account. This aligns the previously published lock builders with the current protocol account order and requires a major release of the fixed package group.
+
+### Minor Changes
+
+- 6c2cf5e: Add local reservation V1 packages, canonical owner validation, address derivation,
+  and CreateReservedV1 instruction builders for Classic and Kit. Activation requires
+  a Swig deployment supporting CreateReservedV1; P-256 owners require a 600,000-unit
+  transaction compute budget.
+
+  Restrict reservation owner types to direct Ed25519, secp256k1, and P-256 owners.
+  Classic reservations return Web3.js PublicKey addresses, and Kit reservations
+  return Kit Address values, including when loading saved packages.
+
+  Route native ESM imports and CommonJS requires to their matching runtime and
+  type declaration entrypoints so the reservation APIs work from packed packages.
+
+### Patch Changes
+
+- Updated dependencies [60976da]
+- Updated dependencies [6c2cf5e]
+  - @swig-wallet/coder@3.0.0
+
 ## 2.2.0
 
 ### Minor Changes
