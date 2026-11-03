@@ -1,13 +1,14 @@
 {
   "typescript": {
     "repository": "https://github.com/anagrambuild/swig-ts",
-    "revision": "96dd3470c6fe2b6a7bcd2db8287d6e55c73a3914",
+    "revision": "24d05c97ad3d17952602fb9731388eb1d0257b68",
     "paths": {
       "packages/classic": "typescript/packages/classic",
       "packages/kit": "typescript/packages/kit",
       "packages/coder": "typescript/packages/coder",
       "packages/lib": "typescript/packages/lib"
-    }
+    },
+    "program_revision": "4628591963a1f6d9196bae67b25fba6c4a9fb0ab"
   },
   "rust": {
     "repository": "https://github.com/anagrambuild/swig-wallet",
@@ -24,5 +25,5 @@
     ],
     "dependency_revision": "869f5ebbe01a11e102d40e7ac5e5ce4575a8a2d9"
   },
-  "scope": "Rust SDK uses the canonical swig-wallet interface and program types; only swig-sdk is published here. Rust authorization-lock support is deferred. Rust fixtures use dependency_revision; TypeScript fixtures retain the original revision. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
+  "scope": "Rust SDK uses the canonical swig-wallet interface and program types; only swig-sdk is published here. Rust authorization-lock support is deferred. Rust fixtures use dependency_revision; TypeScript fixtures use typescript.program_revision for the current authorization-lock ABI. Hosted API, developer, paymaster and MCP packages remain in their source repositories."
 }

@@ -49,7 +49,7 @@ jobs:
         run: |
           git init "$RUNNER_TEMP/swig-wallet"
           git -C "$RUNNER_TEMP/swig-wallet" remote add origin https://github.com/anagrambuild/swig-wallet.git
-          revision=$(python3 -c 'import json; print(json.load(open("solana/source.json"))["rust"]["revision"])')
+          revision=$(python3 -c 'import json; print(json.load(open("solana/source.json"))["typescript"]["program_revision"])')
           git -C "$RUNNER_TEMP/swig-wallet" fetch --depth=1 origin "$revision"
           python3 solana/scripts/build-test-programs.py --program-repo "$RUNNER_TEMP/swig-wallet"
         working-directory: .
