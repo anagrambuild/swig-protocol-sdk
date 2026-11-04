@@ -12,8 +12,9 @@ revisions and path mappings are in [`source.json`](source.json).
 | [`typescript/`](typescript/) | `@swig-wallet/classic`, `kit`, `lib`, `coder` | TypeScript clients, builders, and codecs |
 | [`rust/`](rust/) | `swig-sdk`, `swig-interface` | Rust wallet API and instruction builders |
 
-The Rust crates use the pinned `swig-wallet` revision for their on-chain
-dependencies. They are not published from this repository.
+Rust source builds use the pinned `swig-wallet` revision for their on-chain
+dependencies. `swig-sdk` is published from this repository; shared protocol
+crates, including `swig-interface`, are published from `swig-wallet`.
 
 ## Reservation addresses
 
@@ -22,8 +23,22 @@ TypeScript and Rust expose `ReservationV1` for direct Ed25519, secp256k1, and
 P-256 owners. See the [reservation guide](https://build.onswig.com/solana/reservation-addresses)
 for examples, storage, restoration, and activation requirements.
 
-The TypeScript reservation APIs require a source build. Activation requires a
-Swig program deployment supporting `CreateReservedV1`.
+The reservation APIs are published in version **3.0.0**. Choose the TypeScript
+package for your Solana client:
+
+```bash
+# Web3.js
+npm install @swig-wallet/classic@3.0.0 @solana/web3.js@^1.98.0
+
+# Solana Kit
+npm install @swig-wallet/kit@3.0.0 @solana/kit@^2.1.0
+```
+
+Rust applications can use the published `swig-sdk` and `swig-interface` 3.0.0
+crates. The reservation guide includes the complete Rust dependency setup.
+
+Activation requires a Swig program deployment supporting `CreateReservedV1`.
+Verify support on your target cluster before funding a reserved address.
 
 ## Build and check
 
