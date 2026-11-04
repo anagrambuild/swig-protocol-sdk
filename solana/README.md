@@ -10,10 +10,31 @@ revisions and path mappings are in [`source.json`](source.json).
 | Directory | Packages | Purpose |
 | --- | --- | --- |
 | [`typescript/`](typescript/) | `@swig-wallet/classic`, `kit`, `lib`, `coder` | TypeScript clients, builders, and codecs |
-| [`rust/`](rust/) | `swig-sdk`, `swig-interface` | Rust wallet API and instruction builders |
+| [`rust/`](rust/) | `swig-sdk` | Rust wallet API and instruction builders |
 
-The Rust crates use the pinned `swig-wallet` revision for their on-chain
-dependencies. They are not published from this repository.
+`swig-sdk` is owned and published by this repository. Its `swig-interface` and
+`swig-state` dependencies are owned by `swig-wallet`.
+
+### Rust authorization-lock draft
+
+This branch ports the SDK from wallet PR #240 (`24d2969`) and pins the canonical
+protocol dependencies to wallet PR #226 (`4628591`). It adds lock permissions,
+SOL/token helpers, state reads, and builders for Ed25519, secp256k1, secp256r1,
+sessions, and ProgramExec. The holder's spending captures its own holds; other
+roles cannot spend their reserved balance. Fully captured and expired records
+remain readable until pruned.
+
+The published protocol crates at version 3.0.0 do not contain these APIs. Use
+this branch through Git or a local path for review. A registry release needs
+matching protocol dependency releases and a major SDK version bump first:
+adding a variant to the public `Permission` enum affects exhaustive matches.
+
+CI and `source.json` remain unchanged for this draft. Their Rust fixture pin
+still points to the earlier protocol revision, so the existing Rust compatibility
+and candidate-package checks do not validate this port. Build local fixtures
+from `4628591963a1f6d9196bae67b25fba6c4a9fb0ab` to exercise its tests; record the
+fixture revision with any result. Wallet #240's CLI commands remain in
+`swig-wallet`; this port does not replace those changes.
 
 ## Reservation addresses
 
